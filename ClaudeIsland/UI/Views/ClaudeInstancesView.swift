@@ -36,6 +36,11 @@ struct ClaudeInstancesView: View {
                             .notchSecondaryForeground()
                         Spacer()
 
+                        // Clipboard button
+                        HeaderIconButton(icon: "doc.on.clipboard", hoverColor: Color(red: 0x00/255, green: 0xC0/255, blue: 0xFF/255)) {
+                            viewModel.showClipboard()
+                        }
+
                         // Plugin header buttons
                         PluginHeaderButtons(viewModel: viewModel)
 

@@ -185,31 +185,35 @@ struct ChatView: View {
     @State private var isHeaderHovered = false
 
     private var chatHeader: some View {
-        Button {
-            viewModel.exitChat()
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                    .opacity(isHeaderHovered ? 1.0 : 0.6)
-                    .frame(width: 24, height: 24)
+        HStack(spacing: 8) {
+            Button {
+                viewModel.exitChat()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .opacity(isHeaderHovered ? 1.0 : 0.6)
+                        .frame(width: 24, height: 24)
 
-                Text(session.displayTitle)
-                    .font(.system(size: 14, weight: .semibold))
-                    .opacity(isHeaderHovered ? 1.0 : 0.85)
-                    .lineLimit(1)
+                    Text(session.displayTitle)
+                        .font(.system(size: 14, weight: .semibold))
+                        .opacity(isHeaderHovered ? 1.0 : 0.85)
+                        .lineLimit(1)
 
-                Spacer()
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isHeaderHovered ? theme.overlay.opacity(0.22) : Color.clear)
+                )
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isHeaderHovered ? theme.overlay.opacity(0.22) : Color.clear)
-            )
+            .buttonStyle(.plain)
+            .onHover { isHeaderHovered = $0 }
+
         }
-        .buttonStyle(.plain)
-        .onHover { isHeaderHovered = $0 }
         .padding(.horizontal, 8)
         .padding(.top, 28) // Push content below camera module
         .padding(.bottom, 4)

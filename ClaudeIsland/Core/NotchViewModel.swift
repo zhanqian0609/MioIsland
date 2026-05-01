@@ -29,6 +29,7 @@ enum NotchContentType: Equatable {
     case chat(SessionState)
     case question(SessionState)
     case plugin(String)  // plugin ID
+    case clipboard      // Clipboard history tab
     case completion(CompletionEntry)      // Completion Panel — spec §5.6
 
     var id: String {
@@ -38,6 +39,7 @@ enum NotchContentType: Equatable {
         case .chat(let session): return "chat-\(session.sessionId)"
         case .question(let session): return "question-\(session.sessionId)"
         case .plugin(let pluginId): return "plugin-\(pluginId)"
+        case .clipboard: return "clipboard"
         case .completion(let entry): return "completion-\(entry.id)"
         }
     }
@@ -61,6 +63,12 @@ class NotchViewModel: ObservableObject {
 
     private let screenSelector = ScreenSelector.shared
     private let soundSelector = SoundSelector.shared
+
+    // MARK: - Clipboard
+
+    /// Weak reference to ClipboardStore owned by NotchWindowController.
+    /// Set after the controller creates its ClipboardStore.
+    weak var clipboardStore: ClipboardStore?
 
     // MARK: - Geometry
 
@@ -163,6 +171,11 @@ class NotchViewModel: ObservableObject {
             return CGSize(
                 width: min(screenRect.width * 0.4, 480),
                 height: max(height, 200)
+            )
+        case .clipboard:
+            return CGSize(
+                width: min(screenRect.width * 0.4, 480),
+                height: 360
             )
         case .completion(let entry):
             switch entry.variant {
@@ -465,6 +478,14 @@ class NotchViewModel: ObservableObject {
     /// Go back to instances list and clear saved chat state
     func exitChat() {
         currentChatSession = nil
+        contentType = .instances
+    }
+
+    func showClipboard() {
+        contentType = .clipboard
+    }
+
+    func exitClipboard() {
         contentType = .instances
     }
 

@@ -11,6 +11,8 @@ import SwiftUI
 
 class NotchWindowController: NSWindowController {
     let viewModel: NotchViewModel
+    let clipboardStore: ClipboardStore
+    private let clipboardWatcher: ClipboardWatcher
     private let screen: NSScreen
     let screenID: String
     private var cancellables = Set<AnyCancellable>()
@@ -58,6 +60,14 @@ class NotchWindowController: NSWindowController {
             hasPhysicalNotch: screen.hasPhysicalNotch,
             screenID: screen.persistentID
         )
+
+        // Initialize clipboard store and watcher
+        self.clipboardStore = ClipboardStore()
+        self.clipboardWatcher = ClipboardWatcher(store: clipboardStore)
+        self.clipboardWatcher.start()
+
+        // Inject clipboard store into viewModel for UI access
+        self.viewModel.clipboardStore = self.clipboardStore
 
         // Create the window
         let notchWindow = NotchPanel(

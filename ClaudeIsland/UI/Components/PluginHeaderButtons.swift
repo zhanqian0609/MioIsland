@@ -49,6 +49,10 @@ struct PluginHeaderButtons: View {
         // standalone window pattern sidesteps all three by living in its
         // own NSPanel with its own dismissal rules.
         if hasDockable {
+            HeaderIconButton(icon: "doc.on.clipboard", hoverColor: Color.pluginAccent) {
+                viewModel.showClipboard()
+            }
+
             HeaderIconButton(icon: "ellipsis", hoverColor: Color.pluginAccent) {
                 PluginDockWindow.shared.show(viewModel: viewModel)
             }

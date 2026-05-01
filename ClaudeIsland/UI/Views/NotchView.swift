@@ -524,6 +524,10 @@ struct NotchView: View {
                 )
             case .plugin(let pluginId):
                 PluginContentView(pluginId: pluginId, viewModel: viewModel)
+            case .clipboard:
+                if let store = viewModel.clipboardStore {
+                    ClipboardTabView(store: store, viewModel: viewModel)
+                }
             case .completion(let entry):
                 CompletionPanelView(entry: entry)
             }
