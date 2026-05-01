@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		CL00000100000001AABBCC01 /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = CL00000200000002AABBCC02 /* SocketIO */; };
-		CL00000100000003AABBCC03 /* CodeLightProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CL00000200000004AABBCC04 /* CodeLightProtocol */; };
-		CL00000100000005AABBCC05 /* CodeLightCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = CL00000200000006AABBCC06 /* CodeLightCrypto */; };
 		FDA49F7D2EE11E3C00F9612E /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = FD33FD722EDF32D7002A6548 /* Markdown */; };
 		SP00000100000001SPARKLE01 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = SP00000200000002SPARKLE02 /* Sparkle */; };
 /* End PBXBuildFile section */
@@ -46,8 +44,6 @@
 			files = (
 				FDA49F7D2EE11E3C00F9612E /* Markdown in Frameworks */,
 				CL00000100000001AABBCC01 /* SocketIO in Frameworks */,
-				CL00000100000003AABBCC03 /* CodeLightProtocol in Frameworks */,
-				CL00000100000005AABBCC05 /* CodeLightCrypto in Frameworks */,
 				SP00000100000001SPARKLE01 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,8 +89,6 @@
 			packageProductDependencies = (
 				FD33FD722EDF32D7002A6548 /* Markdown */,
 				CL00000200000002AABBCC02 /* SocketIO */,
-				CL00000200000004AABBCC04 /* CodeLightProtocol */,
-				CL00000200000006AABBCC06 /* CodeLightCrypto */,
 				SP00000200000002SPARKLE02 /* Sparkle */,
 			);
 			productName = ClaudeIsland;
@@ -129,8 +123,6 @@
 			packageReferences = (
 				FD33FD712EDF32D7002A6548 /* XCRemoteSwiftPackageReference "swift-markdown" */,
 				CL00000300000007AABBCC07 /* XCRemoteSwiftPackageReference "socket" */,
-				CL00000300000008AABBCC08 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightProtocol" */,
-				CL00000300000009AABBCC09 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightCrypto" */,
 				SP00000300000003SPARKLE03 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -290,10 +282,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ClaudeIsland/Resources/ClaudeIsland.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 36;
-				DEVELOPMENT_TEAM = 4GT6V2DUTF;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -325,10 +318,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ClaudeIsland/Resources/ClaudeIsland.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 36;
-				DEVELOPMENT_TEAM = 4GT6V2DUTF;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -377,17 +371,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		CL00000300000008AABBCC08 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightProtocol" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../CodeLight/packages/CodeLightProtocol;
-		};
-		CL00000300000009AABBCC09 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightCrypto" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../CodeLight/packages/CodeLightCrypto;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		CL00000300000007AABBCC07 /* XCRemoteSwiftPackageReference "socket" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -420,16 +403,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CL00000300000007AABBCC07 /* XCRemoteSwiftPackageReference "socket" */;
 			productName = SocketIO;
-		};
-		CL00000200000004AABBCC04 /* CodeLightProtocol */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CL00000300000008AABBCC08 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightProtocol" */;
-			productName = CodeLightProtocol;
-		};
-		CL00000200000006AABBCC06 /* CodeLightCrypto */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CL00000300000009AABBCC09 /* XCLocalSwiftPackageReference "../CodeLight/packages/CodeLightCrypto" */;
-			productName = CodeLightCrypto;
 		};
 		FD33FD722EDF32D7002A6548 /* Markdown */ = {
 			isa = XCSwiftPackageProductDependency;
