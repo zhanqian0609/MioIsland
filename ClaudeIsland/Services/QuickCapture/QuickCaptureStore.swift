@@ -42,11 +42,45 @@ final class QuickCaptureStore: ObservableObject {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return sortedItems(items) }
 
-        let filtered = items.filter { item in
-            item.content.localizedCaseInsensitiveContains(q)
-                || item.tags.contains(where: { $0.localizedCaseInsensitiveContains(q) })
-                || item.type.title.localizedCaseInsensitiveContains(q)
+        let tokens = q.split(separator: " ").map(String.init)
+        let statusFilters = tokens.compactMap { token in
+            QuickCaptureStatus(rawValue: token.lowercased().replacingOccurrences(of: "@", with: ""))
         }
+
+        let dayFilter: Date? = {
+            if tokens.contains(where: { $0.caseInsensitiveCompare("today") == .orderedSame }) { return Date() }
+            if tokens.contains(where: { $0.caseInsensitiveCompare("yesterday") == .orderedSame }) {
+                return Calendar.current.date(byAdding: .day, value: -1, to: Date())
+            }
+            return nil
+        }()
+
+        let keywordTokens = tokens.filter {
+            !$0.hasPrefix("@")
+                && $0.caseInsensitiveCompare("today") != .orderedSame
+                && $0.caseInsensitiveCompare("yesterday") != .orderedSame
+        }
+
+        let filtered = items.filter { item in
+            let statusMatched = statusFilters.isEmpty || statusFilters.contains(item.status)
+            let dayMatched: Bool = {
+                guard let dayFilter else { return true }
+                return Calendar.current.isDate(item.createdAt, inSameDayAs: dayFilter)
+            }()
+
+            let keywordMatched: Bool = {
+                guard !keywordTokens.isEmpty else { return true }
+                return keywordTokens.allSatisfy { token in
+                    item.content.localizedCaseInsensitiveContains(token)
+                        || item.tags.contains(where: { $0.localizedCaseInsensitiveContains(token) })
+                        || item.type.title.localizedCaseInsensitiveContains(token)
+                        || item.status.title.localizedCaseInsensitiveContains(token)
+                }
+            }()
+
+            return statusMatched && dayMatched && keywordMatched
+        }
+
         return sortedItems(filtered)
     }
 
@@ -57,9 +91,22 @@ final class QuickCaptureStore: ObservableObject {
         saveToDisk()
     }
 
+    func cycleStatus(_ id: UUID) {
+        guard let idx = items.firstIndex(where: { $0.id == id }) else { return }
+        items[idx].status = items[idx].status.next
+        saveToDisk()
+    }
+
     func delete(_ id: UUID) {
         items.removeAll { $0.id == id }
         saveToDisk()
+    }
+
+    func todayReview() -> (added: Int, done: Int, pending: Int) {
+        let todayItems = items.filter { Calendar.current.isDateInToday($0.createdAt) }
+        let done = todayItems.filter { $0.status == .done }.count
+        let pending = todayItems.filter { $0.status != .done }.count
+        return (added: todayItems.count, done: done, pending: pending)
     }
 
     func loadFromDisk() {

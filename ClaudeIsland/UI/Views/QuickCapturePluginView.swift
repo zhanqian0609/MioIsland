@@ -16,6 +16,7 @@ struct QuickCapturePluginView: View {
     @State private var selectedType: QuickCaptureType = .idea
     @State private var justSaved = false
     @State private var placeholderIndex = 0
+    @State private var hideDoneItems = false
 
     private let placeholderSamples: [String] = [
         "输入后按 Enter 保存（支持 #标签）",
@@ -29,13 +30,17 @@ struct QuickCapturePluginView: View {
     }
 
     private var visibleItems: [QuickCaptureItem] {
-        store.search(query: searchQuery)
+        let searched = store.search(query: searchQuery)
+        guard hideDoneItems else { return searched }
+        return searched.filter { $0.status != .done }
     }
 
     var body: some View {
         VStack(spacing: 10) {
             inputCard
             searchBar
+            filterChipsBar
+            todayReviewCard
             listArea
         }
         .padding(12)
@@ -115,7 +120,7 @@ struct QuickCapturePluginView: View {
     }
 
     private var searchBar: some View {
-        TextField("搜索内容或标签（如 MioIsland）", text: $searchQuery)
+        TextField("搜索：关键词 #标签 @todo/@doing/@done today/yesterday", text: $searchQuery)
             .textFieldStyle(.plain)
             .notchFont(12)
             .foregroundColor(theme.primaryText)
@@ -125,6 +130,100 @@ struct QuickCapturePluginView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(theme.overlay.opacity(0.12))
             )
+    }
+
+    private var filterChipsBar: some View {
+        HStack(spacing: 8) {
+            filterChip("@todo", token: "@todo")
+            filterChip("@doing", token: "@doing")
+            filterChip("@done", token: "@done")
+
+            Spacer()
+
+            Button(hideDoneItems ? "显示已完成" : "隐藏已完成") {
+                hideDoneItems.toggle()
+            }
+            .buttonStyle(.plain)
+            .notchFont(10)
+            .foregroundColor(hideDoneItems ? theme.primaryText : theme.secondaryText)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(hideDoneItems ? theme.overlay.opacity(0.3) : theme.overlay.opacity(0.12))
+            )
+
+            if hasActiveFilters {
+                Button("清空筛选") {
+                    clearAllFilters()
+                }
+                .buttonStyle(.plain)
+                .notchFont(10)
+                .foregroundColor(theme.primaryText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(theme.overlay.opacity(0.3))
+                )
+            }
+        }
+    }
+
+    private func filterChip(_ title: String, token: String) -> some View {
+        let active = isTokenActive(token)
+
+        return Button(title) {
+            applyToken(token)
+        }
+        .buttonStyle(.plain)
+        .notchFont(10)
+        .foregroundColor(active ? theme.primaryText : theme.secondaryText)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(active ? theme.overlay.opacity(0.3) : theme.overlay.opacity(0.12))
+        )
+    }
+
+    private var todayReviewCard: some View {
+        let review = store.todayReview()
+
+        return HStack(spacing: 8) {
+            reviewChip("今日新增", value: review.added, icon: "calendar", token: "today")
+            reviewChip("已完成", value: review.done, icon: "checkmark.circle", token: "@done today")
+            reviewChip("未完成", value: review.pending, icon: "clock", token: "today")
+        }
+    }
+
+    private func reviewChip(_ title: String, value: Int, icon: String, token: String) -> some View {
+        Button {
+            if title == "未完成" {
+                searchQuery = "today"
+                hideDoneItems = true
+            } else {
+                searchQuery = token
+                hideDoneItems = false
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .medium))
+                Text(title)
+                Text("\(value)")
+                    .notchFont(10, weight: .semibold)
+            }
+            .notchFont(10)
+            .foregroundColor(theme.secondaryText)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(theme.overlay.opacity(0.12))
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var listArea: some View {
@@ -191,8 +290,19 @@ struct QuickCapturePluginView: View {
 
                 HStack(spacing: 6) {
                     Text(item.type.title)
+                    Text(item.status.title)
+                        .foregroundColor(item.status == .done ? theme.doneColor : theme.mutedText)
                     Text(timeString(item.createdAt))
                     Spacer()
+
+                    Button {
+                        store.cycleStatus(item.id)
+                    } label: {
+                        Label(item.status.title, systemImage: item.status.icon)
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(item.status == .done ? theme.doneColor : theme.mutedText)
 
                     Button {
                         store.togglePin(item.id)
@@ -226,6 +336,35 @@ struct QuickCapturePluginView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
         return formatter.string(from: date)
+    }
+
+    private func isTokenActive(_ token: String) -> Bool {
+        searchQuery
+            .split(separator: " ")
+            .map(String.init)
+            .contains(token)
+    }
+
+    private var hasActiveFilters: Bool {
+        !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || hideDoneItems
+    }
+
+    private func clearAllFilters() {
+        searchQuery = ""
+        hideDoneItems = false
+    }
+
+    private func applyToken(_ token: String) {
+        let existing = searchQuery
+            .split(separator: " ")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+
+        if existing.contains(token) {
+            searchQuery = existing.filter { $0 != token }.joined(separator: " ")
+        } else {
+            searchQuery = (existing + [token]).joined(separator: " ")
+        }
     }
 
     private func saveCurrentInput() {
