@@ -20,26 +20,6 @@ struct ClipboardTabView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                if let viewModel {
-                    Button {
-                        viewModel.exitClipboard()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(theme.secondaryText)
-                            .frame(width: 24, height: 24)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Image(systemName: "doc.on.clipboard")
-                    .font(.system(size: 11))
-                    .foregroundColor(theme.secondaryText)
-
-                Text("剪贴板")
-                    .notchFont(13, weight: .semibold)
-                    .foregroundColor(theme.primaryText)
-
                 Spacer()
 
                 Text("\(store.items.count)")

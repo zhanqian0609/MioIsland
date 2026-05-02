@@ -66,6 +66,26 @@ final class ClipboardPlugin: NSObject, MioPlugin {
     }
 }
 
+// MARK: - Quick Capture Plugin
+
+final class QuickCapturePlugin: NSObject, MioPlugin {
+    var id: String { "quick-capture" }
+    var name: String { "Quick Capture" }
+    var icon: String { "square.and.pencil" }
+    var version: String { "1.0.0" }
+
+    func activate() {}
+    func deactivate() {}
+
+    func makeView() -> NSView {
+        NSHostingView(rootView: QuickCapturePluginView(store: QuickCaptureStore.shared))
+    }
+
+    @objc func preferredPanelSize() -> NSValue {
+        NSValue(size: NSSize(width: 520, height: 560))
+    }
+}
+
 // MARK: - Official Plugin Registry
 
 /// Metadata for official plugins that ship with the app.
@@ -99,6 +119,13 @@ enum OfficialPlugins {
             icon: "doc.on.clipboard",
             version: "1.0.0",
             factory: { ClipboardPlugin() }
+        ),
+        OfficialPluginInfo(
+            id: "quick-capture",
+            name: "Quick Capture",
+            icon: "square.and.pencil",
+            version: "1.0.0",
+            factory: { QuickCapturePlugin() }
         ),
         // Stats is shipped as a .bundle plugin (source in mio-plugin-stats).
         // It lives in ~/.config/codeisland/plugins/stats.bundle after install.

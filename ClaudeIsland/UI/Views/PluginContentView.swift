@@ -42,13 +42,16 @@ struct PluginContentView: View {
             Button {
                 viewModel.exitChat()
             } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 12, weight: .semibold))
+                Text(pluginName)
+                    .notchFont(12, weight: .semibold)
                     .foregroundColor(theme.primaryText)
-                    .frame(width: 26, height: 26)
-                    .background(Circle().fill(theme.overlay.opacity(0.88)))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule().fill(theme.overlay.opacity(0.88))
+                    )
                     .overlay(
-                        Circle().strokeBorder(theme.border.opacity(0.75), lineWidth: 0.5)
+                        Capsule().strokeBorder(theme.border.opacity(0.75), lineWidth: 0.5)
                     )
             }
             .buttonStyle(.plain)
