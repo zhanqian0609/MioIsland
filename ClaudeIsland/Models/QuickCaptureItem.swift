@@ -71,6 +71,7 @@ struct QuickCaptureItem: Codable, Identifiable, Equatable {
     var tags: [String]
     var createdAt: Date
     var pinned: Bool
+    var reminderAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -79,7 +80,8 @@ struct QuickCaptureItem: Codable, Identifiable, Equatable {
         status: QuickCaptureStatus = .todo,
         tags: [String] = [],
         createdAt: Date = Date(),
-        pinned: Bool = false
+        pinned: Bool = false,
+        reminderAt: Date? = nil
     ) {
         self.id = id
         self.content = content
@@ -88,10 +90,11 @@ struct QuickCaptureItem: Codable, Identifiable, Equatable {
         self.tags = tags
         self.createdAt = createdAt
         self.pinned = pinned
+        self.reminderAt = reminderAt
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, content, type, status, tags, createdAt, pinned
+        case id, content, type, status, tags, createdAt, pinned, reminderAt
     }
 
     init(from decoder: Decoder) throws {
@@ -103,6 +106,7 @@ struct QuickCaptureItem: Codable, Identifiable, Equatable {
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         pinned = try container.decodeIfPresent(Bool.self, forKey: .pinned) ?? false
+        reminderAt = try container.decodeIfPresent(Date.self, forKey: .reminderAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -114,6 +118,7 @@ struct QuickCaptureItem: Codable, Identifiable, Equatable {
         try container.encode(tags, forKey: .tags)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(pinned, forKey: .pinned)
+        try container.encodeIfPresent(reminderAt, forKey: .reminderAt)
     }
 
     var preview: String {

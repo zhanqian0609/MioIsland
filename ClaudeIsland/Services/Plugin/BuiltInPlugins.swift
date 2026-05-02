@@ -86,6 +86,24 @@ final class QuickCapturePlugin: NSObject, MioPlugin {
     }
 }
 
+final class QuickCaptureReviewPlugin: NSObject, MioPlugin {
+    var id: String { "quick-capture-review" }
+    var name: String { "Review" }
+    var icon: String { "doc.text.magnifyingglass" }
+    var version: String { "1.0.0" }
+
+    func activate() {}
+    func deactivate() {}
+
+    func makeView() -> NSView {
+        NSHostingView(rootView: QuickCaptureReviewPluginView(store: QuickCaptureStore.shared))
+    }
+
+    @objc func preferredPanelSize() -> NSValue {
+        NSValue(size: NSSize(width: 520, height: 400))
+    }
+}
+
 // MARK: - Official Plugin Registry
 
 /// Metadata for official plugins that ship with the app.
@@ -126,6 +144,13 @@ enum OfficialPlugins {
             icon: "square.and.pencil",
             version: "1.0.0",
             factory: { QuickCapturePlugin() }
+        ),
+        OfficialPluginInfo(
+            id: "quick-capture-review",
+            name: "Review",
+            icon: "doc.text.magnifyingglass",
+            version: "1.0.0",
+            factory: { QuickCaptureReviewPlugin() }
         ),
         // Stats is shipped as a .bundle plugin (source in mio-plugin-stats).
         // It lives in ~/.config/codeisland/plugins/stats.bundle after install.

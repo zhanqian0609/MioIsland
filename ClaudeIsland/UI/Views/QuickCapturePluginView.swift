@@ -5,6 +5,7 @@
 //  Quick Capture: input + hashtag tags + search + pin/delete.
 //
 
+import AppKit
 import Combine
 import SwiftUI
 
@@ -17,6 +18,11 @@ struct QuickCapturePluginView: View {
     @State private var justSaved = false
     @State private var placeholderIndex = 0
     @State private var hideDoneItems = false
+    @State private var customReminderItemID: UUID?
+    @State private var customReminderDate = Date().addingTimeInterval(3600)
+    @State private var customReminderMinDate = Date().addingTimeInterval(5)
+
+    private let placeholderTimer = Timer.publish(every: 2.8, on: .main, in: .common).autoconnect()
 
     private let placeholderSamples: [String] = [
         "输入后按 Enter 保存（支持 #标签）",
@@ -92,7 +98,9 @@ struct QuickCapturePluginView: View {
                         .fill(theme.overlay.opacity(0.15))
                 )
                 .onSubmit(saveCurrentInput)
-                .onReceive(Timer.publish(every: 2.8, on: .main, in: .common).autoconnect()) { _ in
+                .onReceive(placeholderTimer) { _ in
+                    // 避免在“自定义提醒”编辑中触发全局重绘，导致 DatePicker 弹层被系统收起
+                    guard customReminderItemID == nil else { return }
                     guard input.isEmpty else { return }
                     withAnimation(.easeInOut(duration: 0.2)) {
                         placeholderIndex = (placeholderIndex + 1) % placeholderSamples.count
@@ -137,6 +145,8 @@ struct QuickCapturePluginView: View {
             filterChip("@todo", token: "@todo")
             filterChip("@doing", token: "@doing")
             filterChip("@done", token: "@done")
+            filterChip("today", token: "today")
+            filterChip("yesterday", token: "yesterday")
 
             Spacer()
 
@@ -196,6 +206,7 @@ struct QuickCapturePluginView: View {
             reviewChip("未完成", value: review.pending, icon: "clock", token: "today")
         }
     }
+
 
     private func reviewChip(_ title: String, value: Int, icon: String, token: String) -> some View {
         Button {
@@ -293,6 +304,10 @@ struct QuickCapturePluginView: View {
                     Text(item.status.title)
                         .foregroundColor(item.status == .done ? theme.doneColor : theme.mutedText)
                     Text(timeString(item.createdAt))
+                    if let reminderAt = item.reminderAt {
+                        Text("提醒 \(timeString(reminderAt))")
+                            .foregroundColor(theme.doneColor)
+                    }
                     Spacer()
 
                     Button {
@@ -303,6 +318,29 @@ struct QuickCapturePluginView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(item.status == .done ? theme.doneColor : theme.mutedText)
+
+                    Menu {
+                        Button("1小时后提醒") {
+                            store.setReminder(item.id, at: Date().addingTimeInterval(3600))
+                        }
+                        Button("今晚 21:00 提醒") {
+                            store.setReminder(item.id, at: nextTime(hour: 21, minute: 0))
+                        }
+                        Button("明早 09:00 提醒") {
+                            store.setReminder(item.id, at: nextTime(hour: 9, minute: 0, forceTomorrow: true))
+                        }
+                        Button("自定义时间…") {
+                            openCustomReminder(for: item)
+                        }
+                        Divider()
+                        Button("清除提醒", role: .destructive) {
+                            store.setReminder(item.id, at: nil)
+                        }
+                    } label: {
+                        Image(systemName: item.reminderAt == nil ? "bell" : "bell.badge")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .foregroundColor(item.reminderAt == nil ? theme.mutedText : theme.doneColor)
 
                     Button {
                         store.togglePin(item.id)
@@ -322,6 +360,10 @@ struct QuickCapturePluginView: View {
                 }
                 .notchFont(10, weight: .regular, design: .monospaced)
                 .foregroundColor(theme.mutedText)
+
+                if customReminderItemID == item.id {
+                    inlineCustomReminderEditor(for: item)
+                }
             }
         }
         .padding(.horizontal, 10)
@@ -367,6 +409,20 @@ struct QuickCapturePluginView: View {
         }
     }
 
+    private func nextTime(hour: Int, minute: Int, forceTomorrow: Bool = false) -> Date {
+        let now = Date()
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: now)
+        components.hour = hour
+        components.minute = minute
+        components.second = 0
+
+        let candidate = Calendar.current.date(from: components) ?? now.addingTimeInterval(3600)
+        if forceTomorrow || candidate <= now {
+            return Calendar.current.date(byAdding: .day, value: 1, to: candidate) ?? now.addingTimeInterval(3600)
+        }
+        return candidate
+    }
+
     private func saveCurrentInput() {
         let parsed = parseInput(input)
         guard !parsed.content.isEmpty else { return }
@@ -400,5 +456,73 @@ struct QuickCapturePluginView: View {
 
         let content = contentWords.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
         return (content, Array(Set(tags)).sorted())
+    }
+
+    private func inlineCustomReminderEditor(for item: QuickCaptureItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            DatePicker(
+                "日期",
+                selection: $customReminderDate,
+                in: customReminderMinDate...,
+                displayedComponents: [.date]
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+
+            HStack(spacing: 8) {
+                Text("时间")
+                    .notchFont(10)
+                    .foregroundColor(theme.mutedText)
+
+                DatePicker(
+                    "时间",
+                    selection: $customReminderDate,
+                    in: customReminderMinDate...,
+                    displayedComponents: [.hourAndMinute]
+                )
+                .datePickerStyle(.field)
+                .labelsHidden()
+
+                Spacer()
+            }
+
+            HStack(spacing: 6) {
+                Spacer()
+                Button("取消") { cancelCustomReminder() }
+                    .buttonStyle(.plain)
+                Button("保存") { applyCustomReminder(for: item.id) }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(theme.overlay.opacity(0.14))
+        )
+    }
+
+    private func openCustomReminder(for item: QuickCaptureItem) {
+        if customReminderItemID == item.id {
+            cancelCustomReminder()
+            return
+        }
+
+        customReminderItemID = item.id
+        customReminderMinDate = Date().addingTimeInterval(5)
+        customReminderDate = item.reminderAt ?? Date().addingTimeInterval(3600)
+        if customReminderDate <= customReminderMinDate {
+            customReminderDate = customReminderMinDate
+        }
+    }
+
+    private func cancelCustomReminder() {
+        customReminderItemID = nil
+    }
+
+    private func applyCustomReminder(for id: UUID) {
+        let reminder = max(customReminderDate, Date().addingTimeInterval(5))
+        store.setReminder(id, at: reminder)
+        customReminderItemID = nil
     }
 }
