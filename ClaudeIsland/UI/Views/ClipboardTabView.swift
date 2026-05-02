@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ClipboardTabView: View {
     @ObservedObject var store: ClipboardStore
-    @ObservedObject var viewModel: NotchViewModel
+    let viewModel: NotchViewModel?
     @State private var copiedId: UUID? = nil
 
     private var theme: ThemeResolver {
@@ -20,15 +20,17 @@ struct ClipboardTabView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button {
-                    viewModel.exitClipboard()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(theme.secondaryText)
-                        .frame(width: 24, height: 24)
+                if let viewModel {
+                    Button {
+                        viewModel.exitClipboard()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(theme.secondaryText)
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
 
                 Image(systemName: "doc.on.clipboard")
                     .font(.system(size: 11))

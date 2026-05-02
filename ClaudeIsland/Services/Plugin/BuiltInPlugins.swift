@@ -46,6 +46,26 @@ private struct PairPhonePluginView: View {
     }
 }
 
+// MARK: - Clipboard Plugin
+
+final class ClipboardPlugin: NSObject, MioPlugin {
+    var id: String { "clipboard" }
+    var name: String { "Clipboard" }
+    var icon: String { "doc.on.clipboard" }
+    var version: String { "1.0.0" }
+
+    func activate() {}
+    func deactivate() {}
+
+    func makeView() -> NSView {
+        NSHostingView(rootView: ClipboardTabView(store: ClipboardStore.shared, viewModel: nil))
+    }
+
+    @objc func preferredPanelSize() -> NSValue {
+        NSValue(size: NSSize(width: 520, height: 520))
+    }
+}
+
 // MARK: - Official Plugin Registry
 
 /// Metadata for official plugins that ship with the app.
@@ -72,6 +92,13 @@ enum OfficialPlugins {
             icon: "iphone",
             version: "1.0.0",
             factory: { PairPhonePlugin() }
+        ),
+        OfficialPluginInfo(
+            id: "clipboard",
+            name: "Clipboard",
+            icon: "doc.on.clipboard",
+            version: "1.0.0",
+            factory: { ClipboardPlugin() }
         ),
         // Stats is shipped as a .bundle plugin (source in mio-plugin-stats).
         // It lives in ~/.config/codeisland/plugins/stats.bundle after install.

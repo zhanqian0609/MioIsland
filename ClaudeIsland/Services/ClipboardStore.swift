@@ -11,6 +11,8 @@ import Combine
 
 @MainActor
 final class ClipboardStore: ObservableObject {
+    static let shared = ClipboardStore()
+
     /// All clipboard items, newest first
     @Published private(set) var items: [ClipboardItem] = []
 
