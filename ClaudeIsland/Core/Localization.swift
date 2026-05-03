@@ -148,7 +148,13 @@ enum L10n {
     static var pixelCatMode: String { tr("Pixel Cat Mode", "像素猫模式") }
     static var notchBuddyStyle: String { tr("Buddy Style", "Buddy 样式") }
     static var notchBuddyPixelCat: String { tr("Cat", "像素猫") }
+    static var notchBuddyPixelDog: String { tr("Dog", "像素狗") }
     static var notchBuddyEmoji: String { tr("Emoji", "Emoji") }
+    static var notchBuddySnorlax: String { tr("Snorlax", "卡比兽") }
+    static var notchBuddyPikachu: String { tr("Pikachu", "皮卡丘") }
+    static var notchBuddyBulbasaur: String { tr("Bulbasaur", "妙蛙种子") }
+    static var notchBuddyCharmander: String { tr("Charmander", "小火龙") }
+    static var notchBuddySquirtle: String { tr("Squirtle", "杰尼龟") }
     static var notchBuddyNeon: String { tr("Neon", "霓虹") }
     static var launchAtLogin: String { tr("Launch at Login", "开机启动") }
     static var hooks: String { tr("Hooks", "钩子") }
@@ -540,6 +546,7 @@ enum L10n {
     static var notchThemeRetroArcade: String { tr("Retro Arcade", "复古游戏机") }
     static var notchThemeHighContrast: String { tr("High Contrast", "高对比") }
     static var notchThemeSakura: String { tr("Pink Mist", "粉雾") }
+    static var notchThemeMidnightGlass: String { tr("Midnight Glass", "极夜玻璃") }
     static var notchHoverSpeed: String { tr("Hover Speed", "展开速度") }
     static var notchHoverInstant: String { tr("Fast", "即时") }
     static var notchHoverNormal: String { tr("1s", "1秒") }
@@ -574,6 +581,7 @@ enum L10n {
         case NotchThemeID.retroArcade.rawValue: return notchThemeRetroArcade
         case NotchThemeID.highContrast.rawValue: return notchThemeHighContrast
         case NotchThemeID.sakura.rawValue: return notchThemeSakura
+        case NotchThemeID.midnightGlass.rawValue: return notchThemeMidnightGlass
         default: return ThemeRegistry.shared.displayName(for: id)
         }
     }

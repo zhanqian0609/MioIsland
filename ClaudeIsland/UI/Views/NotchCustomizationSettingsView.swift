@@ -106,17 +106,25 @@ struct NotchCustomizationSettingsView: View {
 
     // MARK: - Buddy style segmented picker row
 
-    /// Two-way segmented picker for which sprite appears in the notch:
-    /// pixel cat (always available) / Claude Code companion emoji. Emoji
-    /// needs `~/.claude.json` to have `companion` data or it falls back
-    /// to the pixel cat at render time. The pick also mirrors into the
-    /// legacy `usePixelCat` AppStorage so ClaudeInstancesView (which
-    /// hasn't been migrated) stays roughly in sync.
+    /// Buddy style picker for which sprite appears in the notch.
+    /// Includes original pixel cat + Claude companion emoji + Pokémon set.
+    /// Emoji mode needs `~/.claude.json` companion data or it falls back
+    /// to the pixel cat at render time.
     private var buddyStyleRow: some View {
         controlRow(icon: "cat", label: L10n.notchBuddyStyle) {
-            HStack(spacing: 0) {
-                buddyStyleSegment(.pixelCat, shortLabel: L10n.notchBuddyPixelCat)
-                buddyStyleSegment(.emoji,    shortLabel: L10n.notchBuddyEmoji)
+            VStack(spacing: 4) {
+                HStack(spacing: 0) {
+                    buddyStyleSegment(.pixelCat, shortLabel: L10n.notchBuddyPixelCat)
+                    buddyStyleSegment(.pixelDog, shortLabel: L10n.notchBuddyPixelDog)
+                    buddyStyleSegment(.emoji, shortLabel: L10n.notchBuddyEmoji)
+                    buddyStyleSegment(.snorlax, shortLabel: L10n.notchBuddySnorlax)
+                }
+                HStack(spacing: 0) {
+                    buddyStyleSegment(.pikachu, shortLabel: L10n.notchBuddyPikachu)
+                    buddyStyleSegment(.bulbasaur, shortLabel: L10n.notchBuddyBulbasaur)
+                    buddyStyleSegment(.charmander, shortLabel: L10n.notchBuddyCharmander)
+                    buddyStyleSegment(.squirtle, shortLabel: L10n.notchBuddySquirtle)
+                }
             }
             .padding(2)
             .background(
@@ -132,14 +140,12 @@ struct NotchCustomizationSettingsView: View {
         let isSelected = store.customization.buddyStyle == style
         return Button {
             store.update { $0.buddyStyle = style }
-            // Keep legacy AppStorage in sync so unmigrated call sites
-            // (ClaudeInstancesView) still render something sensible.
             UserDefaults.standard.set(style == .pixelCat, forKey: "usePixelCat")
         } label: {
             Text(shortLabel)
                 .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                 .foregroundColor(isSelected ? theme.inverseText : theme.secondaryText)
-                .frame(minWidth: 36)
+                .frame(minWidth: 54)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .background(

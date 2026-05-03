@@ -104,6 +104,20 @@ final class NotchCustomizationTests: XCTestCase {
         XCTAssertEqual(FontScale.allCases.count, 4)
     }
 
+    // MARK: - BuddyStyle
+
+    func test_buddyStyle_caseIterableIncludesPokemonSet() {
+        XCTAssertEqual(BuddyStyle.allCases.count, 8)
+        XCTAssertEqual(BuddyStyle.pixelCat.rawValue, "pixelCat")
+        XCTAssertEqual(BuddyStyle.pixelDog.rawValue, "pixelDog")
+        XCTAssertEqual(BuddyStyle.emoji.rawValue, "emoji")
+        XCTAssertEqual(BuddyStyle.snorlax.rawValue, "snorlax")
+        XCTAssertEqual(BuddyStyle.pikachu.rawValue, "pikachu")
+        XCTAssertEqual(BuddyStyle.bulbasaur.rawValue, "bulbasaur")
+        XCTAssertEqual(BuddyStyle.charmander.rawValue, "charmander")
+        XCTAssertEqual(BuddyStyle.squirtle.rawValue, "squirtle")
+    }
+
     // MARK: - NotchThemeID
 
     func test_notchThemeID_allSixCasesDecodeFromRawValues() throws {

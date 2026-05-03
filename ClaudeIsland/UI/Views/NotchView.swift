@@ -940,6 +940,11 @@ struct CollapsedNotchContent: View {
                             .scaleEffect(0.28)
                             .frame(width: 16, height: 16)
                             .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                    case .pixelDog:
+                        PixelDogCharacterView(state: mostUrgentState)
+                            .scaleEffect(0.28)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
                     case .emoji:
                         if let buddy = buddyReader.buddy {
                             EmojiPixelView(emoji: buddy.species.emoji, style: .wave)
@@ -952,6 +957,31 @@ struct CollapsedNotchContent: View {
                                 .frame(width: 16, height: 16)
                                 .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
                         }
+                    case .snorlax:
+                        PokemonBuddyPixelView(kind: .snorlax)
+                            .scaleEffect(0.30)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                    case .pikachu:
+                        PokemonBuddyPixelView(kind: .pikachu)
+                            .scaleEffect(0.30)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                    case .bulbasaur:
+                        PokemonBuddyPixelView(kind: .bulbasaur)
+                            .scaleEffect(0.30)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                    case .charmander:
+                        PokemonBuddyPixelView(kind: .charmander)
+                            .scaleEffect(0.30)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
+                    case .squirtle:
+                        PokemonBuddyPixelView(kind: .squirtle)
+                            .scaleEffect(0.30)
+                            .frame(width: 16, height: 16)
+                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
                     }
                 }
 

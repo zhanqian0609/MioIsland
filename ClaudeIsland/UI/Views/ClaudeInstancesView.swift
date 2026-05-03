@@ -19,7 +19,6 @@ struct ClaudeInstancesView: View {
     @AppStorage("showGroupedSessions") private var showGrouped: Bool = false
     @ObservedObject private var buddyReader = BuddyReader.shared
     @State private var showBuddyCard: Bool = false
-    @AppStorage("usePixelCat") private var usePixelCat: Bool = false
     @ObservedObject private var notchStore: NotchCustomizationStore = .shared
     private var theme: ThemeResolver { ThemeResolver(theme: notchStore.customization.theme) }
 
@@ -251,20 +250,32 @@ struct ClaudeInstancesView: View {
 
             // Animated pixel cat
             VStack(spacing: 12) {
-                if usePixelCat {
-                    PixelCharacterView(state: .idle)
-                        .scaleEffect(0.8)
-                        .frame(width: 52, height: 44)
-                        .offset(y: emptyFloat ? -3 : 3)
-                } else if let buddy = buddyReader.buddy {
+                if notchStore.customization.buddyStyle == .emoji, let buddy = buddyReader.buddy {
                     BuddyASCIIView(buddy: buddy)
                         .frame(width: 80, height: 55)
                         .scaleEffect(0.8)
                         .offset(y: emptyFloat ? -3 : 3)
                 } else {
-                    PixelCharacterView(state: .idle)
-                        .scaleEffect(0.8)
+                    Group {
+                        switch notchStore.customization.buddyStyle {
+                        case .pixelCat, .emoji:
+                            PixelCharacterView(state: .idle)
+                        case .pixelDog:
+                            PixelDogCharacterView(state: .idle)
+                        case .snorlax:
+                            PokemonBuddyPixelView(kind: .snorlax)
+                        case .pikachu:
+                            PokemonBuddyPixelView(kind: .pikachu)
+                        case .bulbasaur:
+                            PokemonBuddyPixelView(kind: .bulbasaur)
+                        case .charmander:
+                            PokemonBuddyPixelView(kind: .charmander)
+                        case .squirtle:
+                            PokemonBuddyPixelView(kind: .squirtle)
+                        }
+                    }
                         .frame(width: 52, height: 44)
+                        .scaleEffect(0.8)
                         .offset(y: emptyFloat ? -3 : 3)
                 }
 
@@ -628,7 +639,7 @@ struct InstanceRow: View {
 
     @ObservedObject private var buddyReader = BuddyReader.shared
     @ObservedObject private var notchStore: NotchCustomizationStore = .shared
-    @AppStorage("usePixelCat") private var usePixelCat: Bool = false
+
     @State private var phaseFlash = false
     @State private var previousPhase: SessionPhase?
     private var theme: ThemeResolver { ThemeResolver(theme: notchStore.customization.theme) }
@@ -674,6 +685,32 @@ struct InstanceRow: View {
     /// Whether this session has ended
     private var isEnded: Bool { session.phase == .ended }
 
+    @ViewBuilder
+    private func buddySprite(animationState: AnimationState, style: BuddyStyle) -> some View {
+        switch style {
+        case .pixelCat:
+            PixelCharacterView(state: animationState)
+        case .pixelDog:
+            PixelDogCharacterView(state: animationState)
+        case .emoji:
+            if let buddy = buddyReader.buddy {
+                EmojiPixelView(emoji: buddy.species.emoji, style: .rock)
+            } else {
+                PixelCharacterView(state: animationState)
+            }
+        case .snorlax:
+            PokemonBuddyPixelView(kind: .snorlax)
+        case .pikachu:
+            PokemonBuddyPixelView(kind: .pikachu)
+        case .bulbasaur:
+            PokemonBuddyPixelView(kind: .bulbasaur)
+        case .charmander:
+            PokemonBuddyPixelView(kind: .charmander)
+        case .squirtle:
+            PokemonBuddyPixelView(kind: .squirtle)
+        }
+    }
+
     private var iconScale: CGFloat { isActive ? 0.45 : 0.35 }
     private var iconSize: CGFloat { isActive ? 28 : 22 }
     private var titleFontSize: CGFloat { isActive ? 13 : 11 }
@@ -684,16 +721,8 @@ struct InstanceRow: View {
             HStack(alignment: .top, spacing: isActive ? 8 : 6) {
                 // Buddy icon or pixel cat
                 ZStack {
-                    if usePixelCat {
-                        PixelCharacterView(state: animationState)
-                            .scaleEffect(iconScale)
-                    } else if let buddy = buddyReader.buddy {
-                        EmojiPixelView(emoji: buddy.species.emoji, style: .rock)
-                            .scaleEffect(iconScale)
-                    } else {
-                        PixelCharacterView(state: animationState)
-                            .scaleEffect(iconScale)
-                    }
+                    buddySprite(animationState: animationState, style: notchStore.customization.buddyStyle)
+                        .scaleEffect(iconScale)
                     // Status dot overlay
                     Circle()
                         .fill(accentColor)

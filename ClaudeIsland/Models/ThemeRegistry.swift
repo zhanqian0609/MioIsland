@@ -236,5 +236,21 @@ final class ThemeRegistry: ObservableObject {
             ),
             source: .builtIn
         ),
+        ThemeDescriptor(
+            id: .midnightGlass,
+            fallbackDisplayName: "Midnight Glass",
+            previewIdleLabelEN: "Standing by",
+            previewIdleLabelZH: "待命",
+            prefersUppercasePreviewLabel: false,
+            tokens: ThemeTokens(
+                chrome: .init(background: .init(hex: "04070F"), overlay: .init(hex: "0C1322"), border: .init(hex: "3A4A66")),
+                text: .init(primary: .init(hex: "EAF2FF"), secondary: .init(hex: "C2CFE8"), muted: .init(hex: "8594AF"), inverse: .black),
+                status: .init(idle: .init(hex: "67E8F9"), working: .init(hex: "60A5FA"), needsYou: .init(hex: "FBBF24"), error: .init(hex: "F87171"), done: .init(hex: "34D399"), thinking: .init(hex: "A78BFA")),
+                badges: .init(agentText: .init(hex: "C5E0FF"), agentFill: .init(hex: "111A2B"), terminalText: .init(hex: "A6D0FF"), terminalFill: .init(hex: "0E1A2B"), subduedText: .init(hex: "D8E3F6"), subduedFill: .init(hex: "141F31")),
+                usage: .init(text: .init(hex: "E3EEFF"), track: .init(hex: "1E2A3E"), fill: .init(hex: "67E8F9"), border: .init(hex: "3A4A66")),
+                chat: .init(bodyText: .init(hex: "EAF2FF"), secondaryText: .init(hex: "C2CFE8"), bubbleText: .init(hex: "EAF2FF"), bubbleFill: .init(hex: "101B2C"), assistantDot: .init(hex: "67E8F9"))
+            ),
+            source: .builtIn
+        ),
     ]
 }

@@ -155,7 +155,13 @@ struct NotchCustomization: Codable, Equatable {
 /// target. Pulled it from the picker rather than ship broken visuals.
 enum BuddyStyle: String, Codable, CaseIterable, Identifiable {
     case pixelCat
+    case pixelDog
     case emoji
+    case snorlax
+    case pikachu
+    case bulbasaur
+    case charmander
+    case squirtle
 
     var id: String { rawValue }
 }
@@ -183,6 +189,7 @@ struct NotchThemeID: RawRepresentable, Codable, Hashable, Identifiable {
     static let retroArcade = NotchThemeID(rawValue: "retroArcade")
     static let highContrast = NotchThemeID(rawValue: "highContrast")
     static let sakura = NotchThemeID(rawValue: "sakura")
+    static let midnightGlass = NotchThemeID(rawValue: "midnightGlass")
 }
 
 /// Four-step relative font scale. String raw values for stable
