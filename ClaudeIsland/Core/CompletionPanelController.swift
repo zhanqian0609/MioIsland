@@ -62,16 +62,24 @@ private func latestAssistantResponse(in session: SessionState) -> String {
 
 @MainActor
 final class CompletionPanelController: NSObject, ObservableObject {
+    struct AutoReplyPlan: Codable, Equatable {
+        let phrase: String
+        let totalCount: Int
+        var remainingCount: Int
+    }
+
     static let shared = CompletionPanelController()
 
     @Published private(set) var state = CompletionPanelState()
+    @Published private(set) var autoReplyPlan: AutoReplyPlan? = nil
 
     // MARK: - Dependencies / observers
 
     private var autoDismissTask: Task<Void, Never>?
     private var sessionsCancellable: AnyCancellable?
     private var observingEnabledKey = false
-    private static let enabledKey = "quickReplyEnabled"
+    nonisolated private static let enabledKey = "quickReplyEnabled"
+    nonisolated private static let autoReplyPlanKey = "completionPanel.autoReplyPlan.v1"
 
     // MARK: - Detection caches
 
@@ -94,6 +102,7 @@ final class CompletionPanelController: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        autoReplyPlan = Self.loadAutoReplyPlan()
         UserDefaults.standard.addObserver(self, forKeyPath: Self.enabledKey, options: [.new, .old], context: nil)
         observingEnabledKey = true
 
@@ -136,6 +145,33 @@ final class CompletionPanelController: NSObject, ObservableObject {
     func recordSendFailure(stableId: String, message: String) {
         state.recordSendFailure(stableId: stableId, message: message)
         autoDismissTask?.cancel(); autoDismissTask = nil
+    }
+
+    func configureAutoReply(phrase: String, count: Int) {
+        let normalized = CompletionPanelInput.normalizedDraft(phrase) ?? ""
+        guard !normalized.isEmpty else { return }
+        let clamped = max(1, min(20, count))
+        autoReplyPlan = AutoReplyPlan(phrase: normalized, totalCount: clamped, remainingCount: clamped)
+        saveAutoReplyPlan(autoReplyPlan)
+
+        // 立即生效：如果当前前台就是 Claude Stop 弹窗，用户点“启用”后立刻发首条，
+        // 不必等待下一次 stop 事件。
+        if let front = state.front,
+           case .claudeStop = front.variant,
+           let session = lastKnownSessions[front.stableId],
+           session.phase == .waitingForInput {
+            attemptAutoReplyIfNeeded(for: session)
+        }
+    }
+
+    func cancelAutoReplyPlan() {
+        autoReplyPlan = nil
+        saveAutoReplyPlan(nil)
+    }
+
+    func autoReplyStatusText() -> String? {
+        guard let plan = autoReplyPlan else { return nil }
+        return L10n.qrAutoReplyRunning(plan.remainingCount, plan.totalCount)
     }
 
     func setPanelVisible(_ visible: Bool) {
@@ -267,6 +303,7 @@ final class CompletionPanelController: NSObject, ObservableObject {
                 // panel to surface EVEN when the terminal is front so they
                 // can respond without pulling focus off their terminal.
                 state.enqueue(makeClaudeStopEntry(for: session))
+                attemptAutoReplyIfNeeded(for: session)
             }
 
             if transitionedToApproval {
@@ -447,6 +484,69 @@ final class CompletionPanelController: NSObject, ObservableObject {
         case .claudeStop:     return s.phase == .waitingForInput
         case .subagentDone:   return true
         case .pendingTool:    if case .waitingForApproval = s.phase { return true }; return false
+        }
+    }
+
+    private func attemptAutoReplyIfNeeded(for session: SessionState) {
+        guard let plan = autoReplyPlan, plan.remainingCount > 0 else { return }
+        let stableId = session.stableId
+        let text = plan.phrase
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let ok = await TerminalWriter.shared.sendTextDirect(
+                text + "\n",
+                claudeUuid: session.sessionId,
+                cwd: session.cwd,
+                livePid: session.pid,
+                cmuxWorkspaceId: session.cmuxWorkspaceId,
+                cmuxSurfaceId: session.cmuxSurfaceId,
+                terminalApp: session.terminalApp
+            )
+            if ok {
+                self.consumeAutoReplyOnce(for: stableId)
+            } else {
+                self.recordSendFailure(stableId: stableId, message: L10n.qrSendFailed)
+            }
+        }
+    }
+
+    private func consumeAutoReplyOnce(for stableId: String) {
+        guard var plan = autoReplyPlan, plan.remainingCount > 0 else { return }
+        plan.remainingCount -= 1
+        if plan.remainingCount <= 0 {
+            autoReplyPlan = nil
+            saveAutoReplyPlan(nil)
+        } else {
+            autoReplyPlan = plan
+            saveAutoReplyPlan(plan)
+        }
+        if let front = state.front, front.stableId == stableId {
+            dismissFront(stableId: stableId)
+        }
+    }
+
+    private static func loadAutoReplyPlan() -> AutoReplyPlan? {
+        guard let data = UserDefaults.standard.data(forKey: autoReplyPlanKey),
+              var decoded = try? JSONDecoder().decode(AutoReplyPlan.self, from: data),
+              decoded.remainingCount > 0,
+              !decoded.phrase.isEmpty else {
+            return nil
+        }
+        decoded = AutoReplyPlan(
+            phrase: decoded.phrase,
+            totalCount: max(1, min(20, decoded.totalCount)),
+            remainingCount: max(1, min(20, decoded.remainingCount))
+        )
+        return decoded
+    }
+
+    private func saveAutoReplyPlan(_ plan: AutoReplyPlan?) {
+        guard let plan else {
+            UserDefaults.standard.removeObject(forKey: Self.autoReplyPlanKey)
+            return
+        }
+        if let data = try? JSONEncoder().encode(plan) {
+            UserDefaults.standard.set(data, forKey: Self.autoReplyPlanKey)
         }
     }
 

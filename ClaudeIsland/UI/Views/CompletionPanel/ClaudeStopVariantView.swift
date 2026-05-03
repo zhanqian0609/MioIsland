@@ -13,6 +13,8 @@ struct ClaudeStopVariantView: View {
     let content: ClaudeStopContent
     @ObservedObject private var controller = CompletionPanelController.shared
     @State private var draftReply = ""
+    @State private var autoReplyPhrase = ""
+    @State private var autoReplyCount = 3
     @FocusState private var isReplyFieldFocused: Bool
 
     private var phrases: [QuickReplyPhrase] { QuickReplyPhrases.current }
@@ -50,6 +52,7 @@ struct ClaudeStopVariantView: View {
                 if let err = controller.state.sendError, err.stableId == entry.stableId {
                     errorRow(err.message)
                 }
+                autoReplyConfigurator
                 quickActionsSection
                 footerRow
             }
@@ -248,12 +251,68 @@ struct ClaudeStopVariantView: View {
         )
     }
 
+    // MARK: - Auto reply
+
+    private var autoReplyConfigurator: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let status = controller.autoReplyStatusText() {
+                HStack(spacing: 8) {
+                    Text(status)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255))
+                    Spacer()
+                    Button(L10n.qrAutoReplyCancel) {
+                        controller.cancelAutoReplyPlan()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.9))
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Text(L10n.qrAutoReplySetupTitle)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.72))
+                    Spacer()
+                    Picker("", selection: $autoReplyPhrase) {
+                        Text(L10n.qrAutoReplyPhrasePlaceholder).tag("")
+                        ForEach(phrases) { phrase in
+                            Text(phrase.text).tag(phrase.text)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 140)
+
+                    Stepper(value: $autoReplyCount, in: 1...20) {
+                        Text(L10n.qrAutoReplyCount(autoReplyCount))
+                            .font(.system(size: 10.5, weight: .medium))
+                            .foregroundColor(.white.opacity(0.72))
+                    }
+                    .frame(width: 140)
+
+                    Button(L10n.qrAutoReplyEnable) {
+                        controller.configureAutoReply(phrase: autoReplyPhrase, count: autoReplyCount)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(autoReplyPhrase.isEmpty)
+                    .foregroundColor(autoReplyPhrase.isEmpty ? .white.opacity(0.35) : .white.opacity(0.92))
+                    .font(.system(size: 10.5, weight: .semibold))
+                }
+            }
+        }
+    }
+
     // MARK: - Phrase row
 
     private var quickActionsSection: some View {
         ChipFlowLayout(spacing: 7) {
             ForEach(phrases) { phrase in
-                PhraseButton(text: phrase.text) { send(phrase.text) }
+                PhraseButton(text: phrase.text) {
+                    if autoReplyPhrase.isEmpty {
+                        autoReplyPhrase = phrase.text
+                    }
+                    send(phrase.text)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

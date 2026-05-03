@@ -30,6 +30,19 @@ struct QuickCaptureAutoSummarySettings {
     var monthlyMinute: Int
 }
 
+struct QuickCaptureClipboardDraft: Equatable {
+    let text: String
+    let sourceApp: String
+    let createdAt: Date
+}
+
+struct QuickCaptureClipboardCaptureSettings {
+    var dingtalkOnlyEnabled: Bool
+    var confirmTimeoutSeconds: Int
+    var smartDedupEnabled: Bool
+    var smartParseTimeEnabled: Bool
+}
+
 @MainActor
 final class QuickCaptureStore: ObservableObject {
     static let shared = QuickCaptureStore()
@@ -37,6 +50,7 @@ final class QuickCaptureStore: ObservableObject {
     private static let logger = Logger(subsystem: "com.codeisland", category: "QuickCaptureStore")
 
     @Published private(set) var items: [QuickCaptureItem] = []
+    @Published private(set) var pendingClipboardDraft: QuickCaptureClipboardDraft?
 
     private let fileName = "quick-capture.json"
     private let directoryName = "ClaudeIsland"
@@ -52,15 +66,26 @@ final class QuickCaptureStore: ObservableObject {
         static let weeklyMinute = "quickcapture.summary.weekly.minute"
         static let monthlyHour = "quickcapture.summary.monthly.hour"
         static let monthlyMinute = "quickcapture.summary.monthly.minute"
+        static let dingtalkClipboardEnabled = "quickcapture.clipboard.dingtalk.enabled"
+        static let clipboardConfirmTimeoutSeconds = "quickcapture.clipboard.confirm.timeout"
+        static let clipboardSmartDedupEnabled = "quickcapture.clipboard.smartDedup.enabled"
+        static let clipboardSmartParseTimeEnabled = "quickcapture.clipboard.smartParseTime.enabled"
     }
+
+    private var pendingDraftAutoDismissWorkItem: DispatchWorkItem?
 
     init() {
         loadFromDisk()
     }
 
     func add(content: String, type: QuickCaptureType, tags: [String] = []) {
+        _ = addAndReturnItem(content: content, type: type, tags: tags)
+    }
+
+    @discardableResult
+    private func addAndReturnItem(content: String, type: QuickCaptureType, tags: [String] = []) -> QuickCaptureItem? {
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty else { return nil }
 
         let cleanedTags = tags
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -70,6 +95,54 @@ final class QuickCaptureStore: ObservableObject {
         items.insert(newItem, at: 0)
         items = sortedItems(items)
         saveToDisk()
+        return newItem
+    }
+
+    @discardableResult
+    func stageClipboardTodoCandidate(_ text: String, sourceApp: String) -> Bool {
+        let settings = clipboardCaptureSettings()
+        guard settings.dingtalkOnlyEnabled else { return false }
+
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        if pendingClipboardDraft?.text == trimmed {
+            return false
+        }
+
+        if settings.smartDedupEnabled, isDuplicateClipboardTodo(trimmed) {
+            return false
+        }
+
+        pendingClipboardDraft = QuickCaptureClipboardDraft(
+            text: trimmed,
+            sourceApp: sourceApp,
+            createdAt: Date()
+        )
+        schedulePendingDraftAutoDismiss(timeoutSeconds: settings.confirmTimeoutSeconds)
+        return true
+    }
+
+    func confirmPendingClipboardTodo() {
+        guard let pending = pendingClipboardDraft else { return }
+        let settings = clipboardCaptureSettings()
+
+        let tags = ["dingtalk", "followup"]
+        let added = addAndReturnItem(content: pending.text, type: .todo, tags: tags)
+
+        if settings.smartParseTimeEnabled,
+           let item = added,
+           let parsed = parseReminderDate(from: pending.text) {
+            setReminder(item.id, at: parsed)
+        }
+
+        cancelPendingDraftAutoDismiss()
+        pendingClipboardDraft = nil
+    }
+
+    func dismissPendingClipboardTodo() {
+        cancelPendingDraftAutoDismiss()
+        pendingClipboardDraft = nil
     }
 
     func search(query: String) -> [QuickCaptureItem] {
@@ -181,6 +254,31 @@ final class QuickCaptureStore: ObservableObject {
             monthlyHour: defaults.object(forKey: DefaultsKey.monthlyHour) as? Int ?? 18,
             monthlyMinute: defaults.object(forKey: DefaultsKey.monthlyMinute) as? Int ?? 0
         )
+    }
+
+    func clipboardCaptureSettings() -> QuickCaptureClipboardCaptureSettings {
+        let defaults = UserDefaults.standard
+        let timeout = defaults.object(forKey: DefaultsKey.clipboardConfirmTimeoutSeconds) as? Int ?? 10
+        return QuickCaptureClipboardCaptureSettings(
+            dingtalkOnlyEnabled: defaults.object(forKey: DefaultsKey.dingtalkClipboardEnabled) as? Bool ?? true,
+            confirmTimeoutSeconds: max(3, min(timeout, 60)),
+            smartDedupEnabled: defaults.object(forKey: DefaultsKey.clipboardSmartDedupEnabled) as? Bool ?? true,
+            smartParseTimeEnabled: defaults.object(forKey: DefaultsKey.clipboardSmartParseTimeEnabled) as? Bool ?? true
+        )
+    }
+
+    func updateClipboardCaptureSettings(_ settings: QuickCaptureClipboardCaptureSettings) {
+        let defaults = UserDefaults.standard
+        defaults.set(settings.dingtalkOnlyEnabled, forKey: DefaultsKey.dingtalkClipboardEnabled)
+        defaults.set(max(3, min(settings.confirmTimeoutSeconds, 60)), forKey: DefaultsKey.clipboardConfirmTimeoutSeconds)
+        defaults.set(settings.smartDedupEnabled, forKey: DefaultsKey.clipboardSmartDedupEnabled)
+        defaults.set(settings.smartParseTimeEnabled, forKey: DefaultsKey.clipboardSmartParseTimeEnabled)
+
+        if !settings.dingtalkOnlyEnabled {
+            dismissPendingClipboardTodo()
+        } else if pendingClipboardDraft != nil {
+            schedulePendingDraftAutoDismiss(timeoutSeconds: settings.confirmTimeoutSeconds)
+        }
     }
 
     func updateAutoSummarySettings(_ settings: QuickCaptureAutoSummarySettings) {
@@ -388,6 +486,88 @@ final class QuickCaptureStore: ObservableObject {
         nextComponents.minute = minute
         nextComponents.second = 0
         return calendar.date(from: nextComponents) ?? now.addingTimeInterval(86400)
+    }
+
+    private func isDuplicateClipboardTodo(_ text: String) -> Bool {
+        let normalizedIncoming = normalizedClipboardText(text)
+        guard !normalizedIncoming.isEmpty else { return true }
+
+        if normalizedClipboardText(pendingClipboardDraft?.text ?? "") == normalizedIncoming {
+            return true
+        }
+
+        let now = Date()
+        let recentWindow: TimeInterval = 6 * 3600
+        return items.contains { item in
+            guard item.type == .todo else { return false }
+            guard now.timeIntervalSince(item.createdAt) <= recentWindow else { return false }
+            return normalizedClipboardText(item.content) == normalizedIncoming
+        }
+    }
+
+    private func normalizedClipboardText(_ text: String) -> String {
+        text
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "[，。！？；：,.!?;:（）()【】\\[\\]{}\"'`~·•-]", with: "", options: .regularExpression)
+    }
+
+    private func parseReminderDate(from text: String) -> Date? {
+        let lowered = text.lowercased()
+        let calendar = Calendar.current
+        let now = Date()
+
+        let hour: Int
+        let minute: Int
+        if let match = lowered.range(of: #"(\d{1,2})[:：点](\d{1,2})"#, options: .regularExpression) {
+            let token = String(lowered[match])
+            let parts = token.split(whereSeparator: { $0 == ":" || $0 == "：" || $0 == "点" })
+            hour = max(0, min(23, Int(parts.first ?? "9") ?? 9))
+            minute = max(0, min(59, Int(parts.last ?? "0") ?? 0))
+        } else {
+            hour = lowered.contains("下午") || lowered.contains("今晚") ? 18 : 9
+            minute = 0
+        }
+
+        var targetDay = now
+        if lowered.contains("明天") || lowered.contains("明早") || lowered.contains("明晚") {
+            targetDay = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+        } else if lowered.contains("后天") {
+            targetDay = calendar.date(byAdding: .day, value: 2, to: now) ?? now
+        }
+
+        var components = calendar.dateComponents([.year, .month, .day], from: targetDay)
+        components.hour = hour
+        components.minute = minute
+        components.second = 0
+
+        guard let candidate = calendar.date(from: components) else { return nil }
+
+        if lowered.contains("今天") || lowered.contains("今晚") || lowered.contains("明天") || lowered.contains("明早") || lowered.contains("明晚") || lowered.contains("后天") {
+            return candidate > now ? candidate : calendar.date(byAdding: .day, value: 1, to: candidate)
+        }
+
+        return nil
+    }
+
+    private func schedulePendingDraftAutoDismiss(timeoutSeconds: Int) {
+        cancelPendingDraftAutoDismiss()
+        let clamped = max(3, min(timeoutSeconds, 60))
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.pendingClipboardDraft = nil
+                self.pendingDraftAutoDismissWorkItem = nil
+            }
+        }
+        pendingDraftAutoDismissWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(clamped), execute: workItem)
+    }
+
+    private func cancelPendingDraftAutoDismiss() {
+        pendingDraftAutoDismissWorkItem?.cancel()
+        pendingDraftAutoDismissWorkItem = nil
     }
 
     private func dataFileURL(createDirectoryIfNeeded: Bool = false) -> URL? {

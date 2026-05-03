@@ -225,6 +225,14 @@ enum L10n {
     static var qrEditorDeleteHint: String { tr("Delete", "删除") }
     static var qrEditorSectionTitle: String { tr("Quick Reply Phrases", "快速应答短语") }
     static var completionPanelEnabled: String { tr("Completion Panel", "任务完成面板") }
+    static var qrAutoReplySetupTitle: String { tr("Auto reply", "自动回复") }
+    static var qrAutoReplyPhrasePlaceholder: String { tr("Pick phrase", "选择短语") }
+    static func qrAutoReplyCount(_ count: Int) -> String { tr("\(count) times", "\(count) 次") }
+    static var qrAutoReplyEnable: String { tr("Enable", "启用") }
+    static var qrAutoReplyCancel: String { tr("Cancel auto reply", "取消自动回复") }
+    static func qrAutoReplyRunning(_ remaining: Int, _ total: Int) -> String {
+        tr("Auto reply running (\(remaining)/\(total) left)", "自动回复进行中（剩余 \(remaining)/\(total)）")
+    }
 
     // MARK: - Settings window
     static var systemSettings: String { tr("System Settings", "系统设置") }
@@ -233,6 +241,8 @@ enum L10n {
     static var tabAppearance: String { tr("Appearance", "外观") }
     static var tabNotifications: String { tr("Notifications", "通知") }
     static var tabBehavior: String { tr("Behavior", "行为") }
+    static var tabQuickCapture: String { tr("Quick Capture", "一键记录") }
+    static var tabDingTalkIntegration: String { tr("DingTalk Integration", "钉钉集成") }
     static var tabAdvanced: String { tr("Advanced", "高级") }
     static var tabAbout: String { tr("About", "关于") }
     static var tabPresets: String { tr("Launch Presets", "启动预设") }
@@ -313,6 +323,14 @@ enum L10n {
     static var wechatLabel: String { tr("WeChat", "微信") }
     static var maintainedTagline: String { tr("Actively maintained · Your star keeps us going!", "持续更新中 · Star 是我们最大的动力！") }
     static var quitApp: String { tr("Quit Mio Island", "退出 Mio Island") }
+    static var quickCaptureDingTalkSectionTitle: String { tr("DingTalk Capture", "钉钉捕获") }
+    static var quickCaptureGeneralSectionTitle: String { tr("General", "通用") }
+    static var quickCaptureDingTalkMovedHint: String { tr("DingTalk capture settings have moved to the left menu: DingTalk Integration.", "钉钉捕获配置已迁移到左侧菜单「钉钉集成」。") }
+    static var quickCaptureDingTalkCaptureEnabled: String { tr("Enable DingTalk copy capture", "启用钉钉复制捕获") }
+    static var quickCaptureSmartDedupEnabled: String { tr("Enable smart deduplication", "启用智能去重") }
+    static var quickCaptureSmartParseTimeEnabled: String { tr("Enable smart time parsing", "启用智能时间解析") }
+    static var quickCaptureConfirmTimeoutLabel: String { tr("Auto-dismiss confirmation after", "确认条自动取消时间") }
+    static func quickCaptureConfirmTimeoutValue(_ seconds: Int) -> String { tr("\(seconds) sec", "\(seconds) 秒") }
 
     // MARK: - Plugin marketplace
     static var pluginMarketplaceTitle: String { tr("Plugin Marketplace", "插件市场") }

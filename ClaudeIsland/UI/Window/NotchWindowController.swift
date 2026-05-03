@@ -63,7 +63,10 @@ class NotchWindowController: NSWindowController {
 
         // Initialize clipboard store and watcher
         self.clipboardStore = ClipboardStore.shared
-        self.clipboardWatcher = ClipboardWatcher(store: clipboardStore)
+        self.clipboardWatcher = ClipboardWatcher(
+            store: clipboardStore,
+            quickCaptureStore: QuickCaptureStore.shared
+        )
         self.clipboardWatcher.start()
 
         // Inject clipboard store into viewModel for UI access

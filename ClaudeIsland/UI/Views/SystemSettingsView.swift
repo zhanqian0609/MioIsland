@@ -163,6 +163,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case appearance
     case notifications
     case behavior
+    case quickCapture
+    case dingTalkIntegration
     case plugins
     case codelight       // Pair iPhone + Launch Presets merged
     case cmuxConnection  // diagnostics for phone→terminal relay
@@ -178,6 +180,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance:     return "paintbrush.fill"
         case .notifications:  return "bell.badge.fill"
         case .behavior:       return "slider.horizontal.3"
+        case .quickCapture:   return "checklist"
+        case .dingTalkIntegration: return "message.badge.fill"
         case .plugins:        return "puzzlepiece.extension.fill"
         case .codelight:      return "iphone.radiowaves.left.and.right"
         case .cmuxConnection: return "terminal.fill"
@@ -193,6 +197,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance:     return L10n.tabAppearance
         case .notifications:  return L10n.tabNotifications
         case .behavior:       return L10n.tabBehavior
+        case .quickCapture:   return L10n.tabQuickCapture
+        case .dingTalkIntegration: return L10n.tabDingTalkIntegration
         case .plugins:        return "Plugins"
         case .codelight:      return L10n.tabCodeLight
         case .cmuxConnection: return L10n.tabCmuxConnection
@@ -212,6 +218,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .appearance:     return "Appearance"
         case .notifications:  return "Notifications"
         case .behavior:       return "Behavior"
+        case .quickCapture:   return "Quick Capture"
+        case .dingTalkIntegration: return "DingTalk Integration"
         case .plugins:        return "Plugins & Extensions"
         case .codelight:      return "CodeLight"
         case .cmuxConnection: return "cmux Connection"
@@ -456,6 +464,8 @@ private struct SystemSettingsContentView: View {
                 case .appearance:     AppearanceTab()
                 case .notifications:  NotificationsTab()
                 case .behavior:       BehaviorTab()
+                case .quickCapture:   QuickCaptureSettingsTab()
+                case .dingTalkIntegration: DingTalkIntegrationSettingsTab()
                 case .plugins:        NativePluginStoreView()
                 case .codelight:      CodeLightTab()
                 case .cmuxConnection: CmuxConnectionTab()
@@ -1160,6 +1170,106 @@ private struct BehaviorTab: View {
                     .opacity(quickReplyEnabled ? 1.0 : 0.5)
             }
         }
+    }
+}
+
+// MARK: - Quick Capture tab
+
+private struct QuickCaptureSettingsTab: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SettingsCard(title: L10n.quickCaptureGeneralSectionTitle) {
+                Text(L10n.quickCaptureDingTalkMovedHint)
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.subtleStrong)
+            }
+        }
+    }
+}
+
+private struct DingTalkIntegrationSettingsTab: View {
+    @ObservedObject private var store = QuickCaptureStore.shared
+    @State private var dingtalkClipboardEnabled = true
+    @State private var clipboardConfirmTimeoutSeconds = 10
+    @State private var smartDedupEnabled = true
+    @State private var smartParseTimeEnabled = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SettingsCard(title: L10n.quickCaptureDingTalkSectionTitle) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Label(L10n.quickCaptureDingTalkCaptureEnabled, systemImage: "switch.2")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Theme.detailText.opacity(0.9))
+                        Spacer()
+                        Toggle("", isOn: $dingtalkClipboardEnabled)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                    }
+
+                    HStack(spacing: 10) {
+                        Text(L10n.quickCaptureConfirmTimeoutLabel)
+                            .font(.system(size: 11))
+                            .foregroundColor(Theme.subtle)
+                        Spacer()
+                        Stepper(value: $clipboardConfirmTimeoutSeconds, in: 3...60) {
+                            Text(L10n.quickCaptureConfirmTimeoutValue(clipboardConfirmTimeoutSeconds))
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.subtleStrong)
+                        }
+                        .frame(width: 150)
+                        .disabled(!dingtalkClipboardEnabled)
+                    }
+
+                    HStack {
+                        Label(L10n.quickCaptureSmartDedupEnabled, systemImage: "text.badge.checkmark")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Theme.detailText.opacity(0.9))
+                        Spacer()
+                        Toggle("", isOn: $smartDedupEnabled)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .disabled(!dingtalkClipboardEnabled)
+                    }
+
+                    HStack {
+                        Label(L10n.quickCaptureSmartParseTimeEnabled, systemImage: "calendar.badge.clock")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Theme.detailText.opacity(0.9))
+                        Spacer()
+                        Toggle("", isOn: $smartParseTimeEnabled)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .disabled(!dingtalkClipboardEnabled)
+                    }
+                }
+            }
+        }
+        .onAppear(perform: loadClipboardCaptureSettings)
+        .onChange(of: dingtalkClipboardEnabled) { applyClipboardCaptureSettings() }
+        .onChange(of: clipboardConfirmTimeoutSeconds) { applyClipboardCaptureSettings() }
+        .onChange(of: smartDedupEnabled) { applyClipboardCaptureSettings() }
+        .onChange(of: smartParseTimeEnabled) { applyClipboardCaptureSettings() }
+    }
+
+    private func loadClipboardCaptureSettings() {
+        let settings = store.clipboardCaptureSettings()
+        dingtalkClipboardEnabled = settings.dingtalkOnlyEnabled
+        clipboardConfirmTimeoutSeconds = settings.confirmTimeoutSeconds
+        smartDedupEnabled = settings.smartDedupEnabled
+        smartParseTimeEnabled = settings.smartParseTimeEnabled
+    }
+
+    private func applyClipboardCaptureSettings() {
+        store.updateClipboardCaptureSettings(
+            QuickCaptureClipboardCaptureSettings(
+                dingtalkOnlyEnabled: dingtalkClipboardEnabled,
+                confirmTimeoutSeconds: clipboardConfirmTimeoutSeconds,
+                smartDedupEnabled: smartDedupEnabled,
+                smartParseTimeEnabled: smartParseTimeEnabled
+            )
+        )
     }
 }
 
