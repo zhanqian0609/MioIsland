@@ -158,10 +158,8 @@ enum BuddyStyle: String, Codable, CaseIterable, Identifiable {
     case pixelDog
     case emoji
     case snorlax
-    case pikachu
-    case bulbasaur
-    case charmander
-    case squirtle
+    case gengar
+    case psyduck
 
     var id: String { rawValue }
 }

@@ -962,23 +962,13 @@ struct CollapsedNotchContent: View {
                             .scaleEffect(0.30)
                             .frame(width: 16, height: 16)
                             .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
-                    case .pikachu:
-                        PokemonBuddyPixelView(kind: .pikachu)
+                    case .gengar:
+                        PokemonBuddyPixelView(kind: .gengar)
                             .scaleEffect(0.30)
                             .frame(width: 16, height: 16)
                             .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
-                    case .bulbasaur:
-                        PokemonBuddyPixelView(kind: .bulbasaur)
-                            .scaleEffect(0.30)
-                            .frame(width: 16, height: 16)
-                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
-                    case .charmander:
-                        PokemonBuddyPixelView(kind: .charmander)
-                            .scaleEffect(0.30)
-                            .frame(width: 16, height: 16)
-                            .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)
-                    case .squirtle:
-                        PokemonBuddyPixelView(kind: .squirtle)
+                    case .psyduck:
+                        PokemonBuddyPixelView(kind: .psyduck)
                             .scaleEffect(0.30)
                             .frame(width: 16, height: 16)
                             .matchedGeometryEffect(id: "crab", in: activityNamespace, isSource: true)

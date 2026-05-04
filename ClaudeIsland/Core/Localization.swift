@@ -151,11 +151,8 @@ enum L10n {
     static var notchBuddyPixelDog: String { tr("Dog", "像素狗") }
     static var notchBuddyEmoji: String { tr("Emoji", "Emoji") }
     static var notchBuddySnorlax: String { tr("Snorlax", "卡比兽") }
-    static var notchBuddyPikachu: String { tr("Pikachu", "皮卡丘") }
-    static var notchBuddyBulbasaur: String { tr("Bulbasaur", "妙蛙种子") }
-    static var notchBuddyCharmander: String { tr("Charmander", "小火龙") }
-    static var notchBuddySquirtle: String { tr("Squirtle", "杰尼龟") }
-    static var notchBuddyNeon: String { tr("Neon", "霓虹") }
+    static var notchBuddyGengar: String { tr("Gengar", "耿鬼") }
+    static var notchBuddyPsyduck: String { tr("Psyduck", "可达鸭") }
     static var launchAtLogin: String { tr("Launch at Login", "开机启动") }
     static var hooks: String { tr("Hooks", "钩子") }
     // Hook diagnostics (Advanced tab)

@@ -90,17 +90,21 @@ struct PixelDogCharacterView: View {
         px(&context, 1, 7, Self.CR); px(&context, 2, 7, Self.CR); px(&context, 3, 7, Self.CR); px(&context, 4, 7, Self.CR); px(&context, 5, 7, Self.CR)
         px(&context, 6, 7, Self.PK); px(&context, 7, 7, Self.CR); px(&context, 8, 7, Self.CR); px(&context, 9, 7, Self.CR); px(&context, 10, 7, Self.CR); px(&context, 11, 7, Self.CR)
 
-        // chin (rounder arc)
-        px(&context, 1, 8, Self.BR2); px(&context, 2, 8, Self.CR); px(&context, 3, 8, Self.CR); px(&context, 4, 8, Self.CR); px(&context, 5, 8, Self.CR)
-        px(&context, 7, 8, Self.CR); px(&context, 8, 8, Self.CR); px(&context, 9, 8, Self.CR); px(&context, 10, 8, Self.CR); px(&context, 11, 8, Self.BR2)
-        px(&context, 2, 9, Self.BR2); px(&context, 10, 9, Self.BR2)
+        // chin (further lowered + rounder)
+        px(&context, 1, 8, Self.BR2); px(&context, 2, 8, Self.CR); px(&context, 3, 8, Self.CR); px(&context, 4, 8, Self.CR)
+        px(&context, 8, 8, Self.CR); px(&context, 9, 8, Self.CR); px(&context, 10, 8, Self.CR); px(&context, 11, 8, Self.BR2)
+
+        // lower chin mass to make jawline visibly softer
+        px(&context, 2, 9, Self.BR2); px(&context, 3, 9, Self.CR); px(&context, 4, 9, Self.CR); px(&context, 5, 9, Self.CR)
+        px(&context, 6, 9, Self.CR); px(&context, 7, 9, Self.CR); px(&context, 8, 9, Self.CR); px(&context, 9, 9, Self.CR); px(&context, 10, 9, Self.BR2)
+        px(&context, 5, 10, Self.CR); px(&context, 6, 10, Self.CR); px(&context, 7, 10, Self.CR)
 
         // tiny smile corners (Q style)
-        px(&context, 5, 8, Self.BK, 0.45)
-        px(&context, 7, 8, Self.BK, 0.45)
+        px(&context, 5, 9, Self.BK, 0.40)
+        px(&context, 7, 9, Self.BK, 0.40)
 
-        // bottom
-        px(&context, 3, 9, Self.BR2); px(&context, 4, 9, Self.BR2); px(&context, 5, 9, Self.BR2); px(&context, 6, 9, Self.BR2); px(&context, 7, 9, Self.BR2); px(&context, 8, 9, Self.BR2); px(&context, 9, 9, Self.BR2)
+        // bottom outline
+        px(&context, 4, 10, Self.BR2); px(&context, 8, 10, Self.BR2)
     }
 
     private func drawIdleEyes(context: inout GraphicsContext, frame: Int) {

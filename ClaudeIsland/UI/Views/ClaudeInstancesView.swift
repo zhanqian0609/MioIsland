@@ -264,14 +264,10 @@ struct ClaudeInstancesView: View {
                             PixelDogCharacterView(state: .idle)
                         case .snorlax:
                             PokemonBuddyPixelView(kind: .snorlax)
-                        case .pikachu:
-                            PokemonBuddyPixelView(kind: .pikachu)
-                        case .bulbasaur:
-                            PokemonBuddyPixelView(kind: .bulbasaur)
-                        case .charmander:
-                            PokemonBuddyPixelView(kind: .charmander)
-                        case .squirtle:
-                            PokemonBuddyPixelView(kind: .squirtle)
+                        case .gengar:
+                            PokemonBuddyPixelView(kind: .gengar)
+                        case .psyduck:
+                            PokemonBuddyPixelView(kind: .psyduck)
                         }
                     }
                         .frame(width: 52, height: 44)
@@ -700,14 +696,10 @@ struct InstanceRow: View {
             }
         case .snorlax:
             PokemonBuddyPixelView(kind: .snorlax)
-        case .pikachu:
-            PokemonBuddyPixelView(kind: .pikachu)
-        case .bulbasaur:
-            PokemonBuddyPixelView(kind: .bulbasaur)
-        case .charmander:
-            PokemonBuddyPixelView(kind: .charmander)
-        case .squirtle:
-            PokemonBuddyPixelView(kind: .squirtle)
+        case .gengar:
+            PokemonBuddyPixelView(kind: .gengar)
+        case .psyduck:
+            PokemonBuddyPixelView(kind: .psyduck)
         }
     }
 

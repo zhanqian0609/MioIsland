@@ -118,12 +118,8 @@ struct NotchCustomizationSettingsView: View {
                     buddyStyleSegment(.pixelDog, shortLabel: L10n.notchBuddyPixelDog)
                     buddyStyleSegment(.emoji, shortLabel: L10n.notchBuddyEmoji)
                     buddyStyleSegment(.snorlax, shortLabel: L10n.notchBuddySnorlax)
-                }
-                HStack(spacing: 0) {
-                    buddyStyleSegment(.pikachu, shortLabel: L10n.notchBuddyPikachu)
-                    buddyStyleSegment(.bulbasaur, shortLabel: L10n.notchBuddyBulbasaur)
-                    buddyStyleSegment(.charmander, shortLabel: L10n.notchBuddyCharmander)
-                    buddyStyleSegment(.squirtle, shortLabel: L10n.notchBuddySquirtle)
+                    buddyStyleSegment(.gengar, shortLabel: L10n.notchBuddyGengar)
+                    buddyStyleSegment(.psyduck, shortLabel: L10n.notchBuddyPsyduck)
                 }
             }
             .padding(2)

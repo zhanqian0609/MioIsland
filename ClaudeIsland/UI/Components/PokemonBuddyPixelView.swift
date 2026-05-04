@@ -4,10 +4,8 @@ import SwiftUI
 /// Priority: recognizability at tiny notch size (silhouette + palette + key organs).
 enum PokemonBuddyKind: Sendable {
     case snorlax
-    case pikachu
-    case bulbasaur
-    case charmander
-    case squirtle
+    case gengar
+    case psyduck
 }
 
 struct PokemonBuddyPixelView: View {
@@ -57,10 +55,8 @@ struct PokemonBuddyPixelView: View {
     private func drawSprite(context: inout GraphicsContext, yOffset: Double) {
         switch kind {
         case .snorlax: drawSnorlax(context: &context, yOffset: yOffset)
-        case .pikachu: drawPikachu(context: &context, yOffset: yOffset)
-        case .bulbasaur: drawBulbasaur(context: &context, yOffset: yOffset)
-        case .charmander: drawCharmander(context: &context, yOffset: yOffset)
-        case .squirtle: drawSquirtle(context: &context, yOffset: yOffset)
+        case .gengar: drawGengar(context: &context, yOffset: yOffset)
+        case .psyduck: drawPsyduck(context: &context, yOffset: yOffset)
         }
     }
 
@@ -100,146 +96,82 @@ struct PokemonBuddyPixelView: View {
         drawMapped(&context, rows: rows, palette: p, yOffset: yOffset)
     }
 
-    private func drawPikachu(context: inout GraphicsContext, yOffset: Double) {
+    private func drawGengar(context: inout GraphicsContext, yOffset: Double) {
         let p: [Character: Color] = [
-            "K": Color(red: 0.10, green: 0.10, blue: 0.10),   // outline / ear tips
-            "Y": Color(red: 0.98, green: 0.86, blue: 0.27),   // base yellow
-            "L": Color(red: 1.00, green: 0.93, blue: 0.58),   // highlight
-            "R": Color(red: 0.90, green: 0.26, blue: 0.30),   // cheeks
-            "B": Color(red: 0.56, green: 0.36, blue: 0.22)    // tail brown root
+            "A": Color(red: 0.361, green: 0.400, blue: 0.620),
+            "B": Color(red: 0.400, green: 0.435, blue: 0.655),
+            "C": Color(red: 0.439, green: 0.463, blue: 0.690),
+            "D": Color(red: 0.510, green: 0.533, blue: 0.765),
+            "E": Color(red: 0.494, green: 0.514, blue: 0.745),
+            "F": Color(red: 0.827, green: 0.843, blue: 0.839),
+            "G": Color(red: 0.580, green: 0.608, blue: 0.812),
+            "H": Color(red: 0.659, green: 0.694, blue: 0.890),
+            "I": Color(red: 0.569, green: 0.592, blue: 0.804),
+            "J": Color(red: 0.624, green: 0.659, blue: 0.859),
+            "K": Color(red: 0.627, green: 0.635, blue: 0.847),
+            "L": Color(red: 0.620, green: 0.643, blue: 0.851),
+            "M": Color(red: 0.435, green: 0.463, blue: 0.686),
+            "N": Color(red: 0.424, green: 0.451, blue: 0.675),
+            "O": Color(red: 0.627, green: 0.631, blue: 0.847),
+            "P": Color(red: 0.404, green: 0.439, blue: 0.663)
         ]
 
         let rows = [
-            "....................",
-            "....K.........K.....",
-            "....KK.......KK.....",
-            ".....KYYYYYYYK......",
-            "....KYYYYYYYYYK.....",
-            "....YYYYYYYYYYY.....",
-            "...KYYYYYYYYYYYK....",
-            "...YYYYLYYYLYYYY....",
-            "..KYYYKYYYYYKYYYK...",
-            "..YYYYYYK.KYYYYYY...",
-            "..YYYRYYYYYYYRYYY...",
-            "...YYYYYYYYYYYYY....",
-            "....YYYYYYYYYYY.....",
-            ".....YYYYYYYYY......",
-            "......YY...YY.......",
-            "......YY...YY.......",
-            "...BB.BB............",
-            "..BBBBBB............",
-            "....BBBB............",
-            "...................."
+            "....D...............",
+            "....G...............",
+            "....EJH.....OK......",
+            "....BILDABABNF......",
+            "....EDECEDCADA...FFF",
+            ".DIGFIGLJHEDAABGHJDA",
+            ".BNCADGJJHIDAAAHHEE.",
+            "..ACBEDJJHICAAANCB..",
+            "...ABDKIKIEAAAAME...",
+            "D..LPPFAMAAAAEAN....",
+            "...LCBAAAAAGFAABPCMG",
+            "...LC.BAAACFEBABACEI",
+            "...GC..HAAABBAAAEK..",
+            "...GEA.F....AABF....",
+            "..KMBAAAF.FAAAA.....",
+            "..HOAAAAAAAAGA......",
+            "..AIAAAAAAAKOK......",
+            "...FB.AAAALLCC......",
+            ".......AADDCCC......",
+            "..........CAAM......"
         ]
 
         drawMapped(&context, rows: rows, palette: p, yOffset: yOffset)
     }
 
-    private func drawBulbasaur(context: inout GraphicsContext, yOffset: Double) {
+    private func drawPsyduck(context: inout GraphicsContext, yOffset: Double) {
         let p: [Character: Color] = [
-            "K": Color(red: 0.11, green: 0.12, blue: 0.12),
-            "S": Color(red: 0.45, green: 0.78, blue: 0.73),   // skin
-            "L": Color(red: 0.62, green: 0.88, blue: 0.82),   // skin light
-            "D": Color(red: 0.29, green: 0.58, blue: 0.54),   // spots/shadow
-            "U": Color(red: 0.43, green: 0.70, blue: 0.37),   // bulb
-            "V": Color(red: 0.58, green: 0.82, blue: 0.50),   // bulb light
-            "R": Color(red: 0.82, green: 0.22, blue: 0.27)    // eyes
+            "K": Color(red: 0.220, green: 0.165, blue: 0.106), // dark brown (outline/eyes)
+            "Y": Color(red: 0.784, green: 0.584, blue: 0.169), // yellow (beak)
+            "W": Color(red: 0.992, green: 0.992, blue: 0.969), // white/cream (face)
+            "L": Color(red: 0.733, green: 0.686, blue: 0.510)  // light brown (skin)
         ]
 
         let rows = [
-            "....................",
-            ".......UUUUU........",
-            "......UUVVVUU.......",
-            "......UUUUUUU.......",
-            ".....KUSSSSSUK......",
-            "....KSSSSSSSSSK.....",
-            "...KSSSLSSSLSSSK....",
-            "...SSSSSSSSSSSSS....",
-            "..KSSSKSSRSSKSSSK...",
-            "..SSSDSSSKSSSDSSS...",
-            "..SSSSSSSSSSSSSSS...",
-            "...SSSDSSSSSDSSS....",
-            "....SSSSSSSSSSS.....",
-            ".....SSSSSSSSS......",
-            "......SSS..SS.......",
-            "......SS....SS......",
-            "....................",
-            "....................",
-            "....................",
-            "...................."
+            "WWWWWWWWWWWWWWWWWWWW",
+            "WWWWWWW.LWWWWWWWWWWW",
+            "WWWWWWW.KWWWWWWWWWWW",
+            "WWWWWWYYYYYYYWWWWWWW",
+            "WWWWYYYYYYYYWLWWWWWW",
+            "WWWYYYWWWYYWWYYWWWWW",
+            "WWYYYYYYYWWWWYYWWWWW",
+            "W.YYYYY.WWWWWWYWWWWW",
+            "WYYYYY.YWWWWWWWWWWWW",
+            "WWYYYYYYWWWWWWWWWWWW",
+            "WWYYYYYYYLWWWWLWWWWW",
+            "WWYYYYYYYYYYYYWWWWWW",
+            "WWYYYYYYYYYYYYWWWWWW",
+            "WWWYYYYYYYYYYYYYWWWW",
+            "WWWWWYYYYYYYYYYWWWWW",
+            "WWWWWYYYYYYYYWWWWWWW",
+            "WWW.WWWWYYLWWWWWWWWW",
+            "WWWWWWWWWWWWWWWWWWWW",
+            "WWWWWWWWWWWWWWWWWWWW",
+            "WWWWWWWWWWWWWWWWWWWW"
         ]
-
-        drawMapped(&context, rows: rows, palette: p, yOffset: yOffset)
-    }
-
-    private func drawCharmander(context: inout GraphicsContext, yOffset: Double) {
-        let p: [Character: Color] = [
-            "K": Color(red: 0.11, green: 0.10, blue: 0.10),
-            "O": Color(red: 0.95, green: 0.56, blue: 0.28),
-            "L": Color(red: 0.99, green: 0.69, blue: 0.41),
-            "B": Color(red: 0.99, green: 0.87, blue: 0.65),
-            "F": Color(red: 0.99, green: 0.78, blue: 0.22),
-            "I": Color(red: 1.00, green: 0.95, blue: 0.72)
-        ]
-
-        let rows = [
-            "....................",
-            "........OO..........",
-            "......KOOOOK........",
-            ".....KOOOLOOK.......",
-            ".....OOOOOOOOK......",
-            "....KOOOOOOOOO......",
-            "....OOOOK.OOOO......",
-            "...KOOOBBBBOOOK.....",
-            "...OOOOBBBBOOOO.....",
-            "...OOOOBBBBOOOO.....",
-            "....OOOOOOOOOO......",
-            ".....OOOOOOOO.......",
-            "......OOOOOO........",
-            ".......OOO..........",
-            ".......OO...........",
-            "........OOO....F....",
-            ".........OOOO.FFI...",
-            "..........OOO..F....",
-            "....................",
-            "...................."
-        ]
-
-        drawMapped(&context, rows: rows, palette: p, yOffset: yOffset)
-    }
-
-    private func drawSquirtle(context: inout GraphicsContext, yOffset: Double) {
-        let p: [Character: Color] = [
-            "K": Color(red: 0.11, green: 0.12, blue: 0.13),
-            "C": Color(red: 0.50, green: 0.79, blue: 0.93),
-            "L": Color(red: 0.68, green: 0.89, blue: 0.97),
-            "H": Color(red: 0.74, green: 0.53, blue: 0.34),
-            "E": Color(red: 0.56, green: 0.40, blue: 0.27),
-            "B": Color(red: 0.94, green: 0.88, blue: 0.73)
-        ]
-
-        let rows = [
-            "....................",
-            "........CCC.........",
-            "......KCCCCCK.......",
-            ".....KCCCLLCCK......",
-            ".....CCCHHHCCC......",
-            "....KCCHEEEHCCK.....",
-            "....CCCHEB EHCCC....",
-            "...KCCCHEBBEHCCCK...",
-            "...CCCCHBBBBHCCCC...",
-            "...CCCCHEEEHCCCC....",
-            "....CCCCCHHCCCCC....",
-            ".....CCCCCCCCCC.....",
-            "......CCCCCCCC......",
-            ".......CC..CC.......",
-            ".......CC...CC......",
-            "............CCC.....",
-            ".............CCC....",
-            "..............CC....",
-            "....................",
-            "...................."
-        ].map { $0.replacingOccurrences(of: " ", with: "") }
 
         drawMapped(&context, rows: rows, palette: p, yOffset: yOffset)
     }
