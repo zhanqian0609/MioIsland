@@ -36,6 +36,7 @@ struct NotchView: View {
     @AppStorage("compactCollapsed") private var compactCollapsed: Bool = false
     @ObservedObject private var notchStore: NotchCustomizationStore = .shared
     @ObservedObject private var controller = CompletionPanelController.shared
+    @StateObject private var quickCaptureStore = QuickCaptureStore.shared
     private var theme: ThemeResolver { ThemeResolver(theme: notchStore.customization.theme) }
 
     @Namespace private var activityNamespace
@@ -469,7 +470,28 @@ struct NotchView: View {
                 }
             }
             .padding(.leading, 6)
+
+            // Show reminder items scrolling individually when no active sessions
+            if !quickCaptureStore.todaysReminders().isEmpty {
+                ScrollingReminderItemsView(reminders: sortedTodaysReminders)
+                    .padding(.leading, 4)
+            }
+
             Spacer()
+        }
+    }
+
+    /// Returns reminders sorted by type priority: todo > meeting > idea
+    private var sortedTodaysReminders: [QuickCaptureItem] {
+        quickCaptureStore.todaysReminders().sorted { a, b in
+            let priority: (QuickCaptureType) -> Int = {
+                switch $0 {
+                case .todo: return 0
+                case .meeting: return 1
+                case .idea: return 2
+                }
+            }
+            return priority(a.type) < priority(b.type)
         }
     }
 
@@ -1227,64 +1249,116 @@ struct CollapsedNotchContent: View {
 // MARK: - Scrolling Text View
 
 /// Horizontally scrolling text for the collapsed notch.
-/// If text fits, it stays static. If it overflows, it scrolls continuously.
+/// Uses TimelineView for smooth 60fps animation.
 struct ScrollingTextView: View {
     let text: String
 
     @State private var textWidth: CGFloat = 0
     @State private var containerWidth: CGFloat = 0
-    @State private var offset: CGFloat = 0
 
     private var needsScrolling: Bool {
         textWidth > containerWidth && containerWidth > 0
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let availableWidth = geo.size.width
+        GeometryReader { containerGeo in
+            let availableWidth = containerGeo.size.width
 
-            Text(text)
-                .notchFont(13, weight: .regular, design: .monospaced)
-                .notchSecondaryForeground()
-                .lineLimit(1)
-
-                .background(
-                    GeometryReader { textGeo in
-                        Color.clear
-                            .onAppear {
-                                textWidth = textGeo.size.width
-                                containerWidth = availableWidth
-                                startScrollingIfNeeded()
-                            }
-                            .onChange(of: text) { _, _ in
-                                textWidth = textGeo.size.width
-                                containerWidth = availableWidth
-                                offset = 0
-                                startScrollingIfNeeded()
-                            }
-                    }
+            TimelineView(.animation) { timeline in
+                let elapsed = timeline.date.timeIntervalSinceReferenceDate
+                let animOffset = Self.computeOffset(
+                    elapsed: elapsed,
+                    textWidth: textWidth,
+                    containerWidth: containerWidth
                 )
-                .offset(x: needsScrolling ? offset : 0)
+
+                Text(text)
+                    .notchFont(13, weight: .regular, design: .monospaced)
+                    .notchSecondaryForeground()
+                    .lineLimit(1)
+                    .fixedSize()
+                    .background(
+                        GeometryReader { textGeo in
+                            Color.clear
+                                .onAppear {
+                                    textWidth = textGeo.size.width
+                                    containerWidth = availableWidth
+                                }
+                                .onChange(of: text) { _, _ in
+                                    textWidth = textGeo.size.width
+                                }
+                        }
+                    )
+                    .offset(x: needsScrolling ? animOffset : 0)
+            }
         }
         .frame(height: 14)
         .clipped()
     }
 
-    private func startScrollingIfNeeded() {
-        guard needsScrolling else {
-            offset = 0
+    private static func computeOffset(elapsed: Double, textWidth: CGFloat, containerWidth: CGFloat) -> CGFloat {
+        guard textWidth > containerWidth && containerWidth > 0 else { return 0 }
+        let scrollDistance = textWidth + 40
+        let duration = Double(scrollDistance) / 30.0
+        let t = elapsed.truncatingRemainder(dividingBy: duration)
+        let progress = t / duration
+        let totalDistance = containerWidth + textWidth
+        return CGFloat(progress) * totalDistance - containerWidth
+    }
+}
+
+// MARK: - Scrolling Reminder Items View
+
+/// Scrolls through individual reminder items one by one.
+/// Each item is shown separately with pauses between transitions.
+private struct ScrollingReminderItemsView: View {
+    let reminders: [QuickCaptureItem]
+
+    @State private var currentIndex: Int = 0
+    @State private var text: String = ""
+
+    private let pauseDuration: TimeInterval = 3.0
+
+    var body: some View {
+        ScrollingTextView(text: text)
+            .onAppear {
+                updateText()
+                startCycle()
+            }
+            .onChange(of: reminders) { _, _ in
+                currentIndex = 0
+                updateText()
+            }
+    }
+
+    private func updateText() {
+        guard !reminders.isEmpty else {
+            text = ""
             return
         }
+        let item = reminders[currentIndex]
+        let timeStr: String
+        if let reminderAt = item.reminderAt {
+            let f = DateFormatter()
+            f.dateFormat = "HH:mm"
+            timeStr = f.string(from: reminderAt)
+        } else {
+            timeStr = ""
+        }
+        text = "[\(item.type.title)] \(item.content)\(timeStr.isEmpty ? "" : " ·\(timeStr)")"
+    }
 
-        // Scroll from right edge to left, then reset
-        let scrollDistance = textWidth + 40  // extra gap before restart
-        let duration = Double(scrollDistance) / 30.0  // ~30pt/sec
+    private func startCycle() {
+        guard reminders.count > 1 else { return }
 
-        // Reset to start position (text starts just off-screen right)
-        offset = containerWidth
+        // Cycle to next item after pause
+        DispatchQueue.main.asyncAfter(deadline: .now() + pauseDuration) {
+            guard !reminders.isEmpty else { return }
+            currentIndex = (currentIndex + 1) % reminders.count
+            updateText()
 
-        withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-            offset = -textWidth
+            // Continue cycling
+            startCycle()
         }
     }
 }

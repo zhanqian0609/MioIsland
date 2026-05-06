@@ -8,9 +8,9 @@
 import Foundation
 
 enum QuickCaptureType: String, Codable, CaseIterable, Identifiable {
-    case idea
     case todo
     case meeting
+    case idea
 
     var id: String { rawValue }
 

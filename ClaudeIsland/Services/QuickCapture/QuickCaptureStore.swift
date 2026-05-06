@@ -217,6 +217,20 @@ final class QuickCaptureStore: ObservableObject {
         return (added: todayItems.count, done: done, pending: pending)
     }
 
+    /// Returns items with reminders scheduled for today or tomorrow
+    func todaysReminders() -> [QuickCaptureItem] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) else { return [] }
+        let tomorrowStart = calendar.startOfDay(for: tomorrow)
+
+        return items.filter { item in
+            guard let reminderAt = item.reminderAt else { return false }
+            let reminderDay = calendar.startOfDay(for: reminderAt)
+            return reminderDay == calendar.startOfDay(for: now) || reminderDay == tomorrowStart
+        }
+    }
+
     func weeklySummary() -> QuickCapturePeriodSummary {
         summary(days: 7, periodName: "本周")
     }
@@ -314,12 +328,12 @@ final class QuickCaptureStore: ObservableObject {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
 
-        do {
-            guard let url = dataFileURL(createDirectoryIfNeeded: true) else { return }
-            let data = try encoder.encode(items)
-            try data.write(to: url, options: .atomic)
-        } catch {
-            Self.logger.error("saveToDisk failed: \(error.localizedDescription, privacy: .public)")
+        guard let url = dataFileURL(createDirectoryIfNeeded: true) else { return }
+        let data = try? encoder.encode(items)
+
+        Task.detached(priority: .utility) {
+            guard let data else { return }
+            try? data.write(to: url, options: .atomic)
         }
     }
 
